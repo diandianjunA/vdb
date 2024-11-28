@@ -1,33 +1,34 @@
 import numpy as np
- 
-# 定义要生成的数据大小（以MB为单位）
-sizes_mb = [5, 50, 100, 500]
- 
-# 每个向量中元素的数量（可以根据需要调整）
-elements_per_vector = 100
- 
-# 数据类型（float32 每个元素占用4个字节）
-dtype = np.float32
- 
-# 计算每个MB对应的向量数量（基于float32的大小）
-vectors_per_mb = (1024 * 1024) // (elements_per_vector * dtype().nbytes)
- 
-# 生成并保存数据
-for size_mb in sizes_mb:
-    # 计算需要的向量数量
-    num_vectors = int(size_mb * vectors_per_mb)
+import os
+
+def generate_vector_file(file_name, file_size_mb, vector_dim=100):
+    """
+    生成指定大小的向量数据文件
+
+    :param file_name: 输出文件名
+    :param file_size_mb: 文件大小（单位：MB）
+    :param vector_dim: 向量的维度
+    """
+    float_size = 4  # 32位float占4字节
+    vectors_per_file = (file_size_mb * 1024 * 1024) // (vector_dim * float_size)
     
     # 生成随机向量数据
-    vectors = np.random.rand(num_vectors, elements_per_vector).astype(dtype)
+    vectors = np.random.rand(vectors_per_file, vector_dim).astype(np.float32)
     
-    # 构造文件名
-    filename = f'vectors_{size_mb}MB.npy'
+    # 保存到文件
+    with open(file_name, 'wb') as f:
+        f.write(vectors.tobytes())
+
+    print(f"Generated file: {file_name} with size {os.path.getsize(file_name) / (1024 * 1024):.2f} MB")
+
+if __name__ == "__main__":
+    # 文件名与大小配置
+    file_configs = [
+        ("vector_5MB.bin", 5),
+        ("vector_50MB.bin", 50),
+        ("vector_100MB.bin", 100),
+        ("vector_500MB.bin", 500)
+    ]
     
-    # 保存数据到文件
-    np.save(filename, vectors)
-    
-    # 输出确认信息
-    print(f'Saved {filename} ({size_mb} MB)')
- 
-# 注意：这个脚本使用了numpy库来生成和保存数据。
-# 如果你没有安装numpy，可以通过运行'pip install numpy'来安装它。
+    for file_name, size_mb in file_configs:
+        generate_vector_file(file_name, size_mb)

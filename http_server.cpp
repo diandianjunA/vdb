@@ -14,6 +14,9 @@ HttpServer::HttpServer(const std::string& host, int port, VectorEngine* vector_e
     server.Post("/query", [this](const httplib::Request& req, httplib::Response& res) {
         queryHandler(req, res);
     });
+    server.Post("/insert_batch", [this](const httplib::Request& req, httplib::Response& res) {
+        insertBatchHandler(req, res);
+    });
 }
 
 void HttpServer::start() {
@@ -23,11 +26,13 @@ void HttpServer::start() {
 bool HttpServer::isRequestValid(const rapidjson::Document& json_request, CheckType check_type) {
     switch(check_type) {
         case CheckType::SEARCH:
-            return json_request.HasMember(REQUEST_VECTORS) && json_request.HasMember(REQUEST_K) && (!json_request.HasMember(REQUEST_INDEX_TYPE) || json_request[REQUEST_INDEX_TYPE].IsString());
+            return json_request.HasMember(REQUEST_VECTOR) && json_request.HasMember(REQUEST_K) && (!json_request.HasMember(REQUEST_INDEX_TYPE) || json_request[REQUEST_INDEX_TYPE].IsString());
         case CheckType::INSERT:
-            return json_request.HasMember(REQUEST_VECTORS) && json_request.HasMember(REQUEST_ID) && (!json_request.HasMember(REQUEST_INDEX_TYPE) || json_request[REQUEST_INDEX_TYPE].IsString());
+            return json_request.HasMember(REQUEST_VECTOR) && json_request.HasMember(REQUEST_ID) && (!json_request.HasMember(REQUEST_INDEX_TYPE) || json_request[REQUEST_INDEX_TYPE].IsString());
         case CheckType::QUERY:
             return json_request.HasMember(REQUEST_ID);
+        case CheckType::INSERT_BATCH:
+            return json_request.HasMember(REQUEST_VECTORS) && json_request.HasMember(REQUEST_IDS) && (!json_request.HasMember(REQUEST_INDEX_TYPE) || json_request[REQUEST_INDEX_TYPE].IsString());
         default:
             return false;
     }
@@ -69,8 +74,8 @@ void HttpServer::searchHandler(const httplib::Request& req, httplib::Response& r
     rapidjson::Document json_request;
     json_request.Parse(req.body.c_str());
 
-    // 打印用户的输入参数
-    GlobalLogger->info("Search request parameters: {}", req.body);
+    // // 打印用户的输入参数
+    // GlobalLogger->info("Search request parameters: {}", req.body);
 
     // 检查json文档是否为有效对象
     if (!json_request.IsObject()) {
@@ -145,8 +150,8 @@ void HttpServer::insertHandler(const httplib::Request& req, httplib::Response& r
     rapidjson::Document json_request;
     json_request.Parse(req.body.c_str());
 
-    // 打印用户的输入参数
-    GlobalLogger->info("Insert request parameters: {}", req.body);
+    // // 打印用户的输入参数
+    // GlobalLogger->info("Insert request parameters: {}", req.body);
 
     // 检查JSON文档是否为有效对象
     if (!json_request.IsObject()) {
@@ -195,8 +200,8 @@ void HttpServer::queryHandler(const httplib::Request& req, httplib::Response& re
     rapidjson::Document json_request;
     json_request.Parse(req.body.c_str());
 
-    // 打印用户的输入参数
-    GlobalLogger->info("Insert request parameters: {}", req.body);
+    // // 打印用户的输入参数
+    // GlobalLogger->info("Insert request parameters: {}", req.body);
 
     // 检查JSON文档是否为有效对象
     if (!json_request.IsObject()) {
@@ -228,6 +233,45 @@ void HttpServer::queryHandler(const httplib::Request& req, httplib::Response& re
     } else {
         json_response.AddMember(RESPONSE_RETCODE, RESPONSE_RETCODE_ERROR, allocator);
     }
+
+    setJsonResponse(json_response, res);
+}
+
+void HttpServer::insertBatchHandler(const httplib::Request& req, httplib::Response& res) {
+    GlobalLogger->debug("Received insert batch request");
+
+    // 解析JSON请求
+    rapidjson::Document json_request;
+    json_request.Parse(req.body.c_str());
+
+    // // 打印用户的输入参数
+    // GlobalLogger->info("Insert request parameters: {}", req.body);
+
+    // 检查JSON文档是否为有效对象
+    if (!json_request.IsObject()) {
+        GlobalLogger->error("Invalid JSON request");
+        res.status = 400;
+        setErrorJsonResponse(res, RESPONSE_RETCODE_ERROR, "Invalid JSON request");
+        return;
+    }
+
+    // 检查请求的合法性
+    if (!isRequestValid(json_request, CheckType::INSERT_BATCH)) { // 添加对isRequestValid的调用
+        GlobalLogger->error("Missing vectors or id parameter in the request");
+        res.status = 400;
+        setErrorJsonResponse(res, RESPONSE_RETCODE_ERROR, "Missing vectors or k parameter in the request");
+        return;
+    }
+
+    vector_engine_->insert_batch(json_request);
+
+    // 设置响应
+    rapidjson::Document json_response;
+    json_response.SetObject();
+    rapidjson::Document::AllocatorType& allocator = json_response.GetAllocator();
+
+    // 添加retCode到响应
+    json_response.AddMember(RESPONSE_RETCODE, RESPONSE_RETCODE_SUCCESS, allocator);
 
     setJsonResponse(json_response, res);
 }

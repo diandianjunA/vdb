@@ -30,5 +30,6 @@ add_executable(vdb vdb_server.cpp ${SOURCES})
  
 #补充添加链接库，如果需要添加链接库较多，最好这样写
 target_link_libraries(vdb PRIVATE 
-	faiss openblas pthread rocksdb roaring snappy z bz2 zstd /usr/lib/x86_64-linux-gnu/liblz4.a
+	# faiss openblas pthread rocksdb snappy z bz2 zstd lz4
+    faiss openblas pthread rocksdb
 )

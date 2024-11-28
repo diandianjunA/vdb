@@ -1,2 +1,7 @@
 build/
 .vscode/
+scripts/vector_5MB.bin
+scripts/vector_50MB.bin
+scripts/vector_100MB.bin
+scripts/vector_500MB.bin
+scripts/insert.log

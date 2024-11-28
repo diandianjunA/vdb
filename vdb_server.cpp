@@ -12,8 +12,8 @@ int main() {
     GlobalLogger->info("Global logger initialized");
 
     // 初始化全局IndexFactory
-    int dim = 1; // 向量维度
-    int num_data = 1000; // 数据量
+    int dim = 100; // 向量维度
+    int num_data = 1400000; // 数据量
     IndexFactory* globalIndexFactory = getGlobalIndexFactory();
     globalIndexFactory->init(IndexFactory::IndexType::FLAT, dim);
     globalIndexFactory->init(IndexFactory::IndexType::HNSW, dim, num_data);

@@ -11,6 +11,7 @@ public:
     std::pair<std::vector<long>, std::vector<float>> search(const rapidjson::Document& json_request);
     void insert(const rapidjson::Document& json_request);
     rapidjson::Document query(const rapidjson::Document& json_request);
+    void insert_batch(const rapidjson::Document& json_request);
 
 private:
     VectorIndex* vector_index_;
