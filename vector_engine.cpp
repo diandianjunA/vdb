@@ -2,7 +2,7 @@
 #include "include/constant.h"
 #include "rapidjson/document.h"
 
-VectorEngine::VectorEngine(VectorIndex* vector_index, VectorStorage* vector_storage) : vector_index_(vector_index), vector_storage_(vector_storage) {}
+VectorEngine::VectorEngine(std::string db_path, VectorIndex* vector_index, VectorStorage* vector_storage) :db_path(db_path), vector_index_(vector_index), vector_storage_(vector_storage) {}
 
 VectorEngine::~VectorEngine() {
     delete vector_storage_;

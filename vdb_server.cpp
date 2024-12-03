@@ -19,10 +19,12 @@ int main() {
     globalIndexFactory->init(IndexFactory::IndexType::HNSW, dim, num_data);
     globalIndexFactory->init(IndexFactory::IndexType::HNSWFLAT, dim);
 
-    VectorIndex vector_index;
-    VectorStorage vector_storage("/tmp/vdb");
+    std::string db_path = "/tmp/vdb";
 
-    VectorEngine vector_engine(&vector_index, &vector_storage);
+    VectorIndex vector_index;
+    VectorStorage vector_storage(db_path);
+
+    VectorEngine vector_engine(db_path, &vector_index, &vector_storage);
 
     // 创建并启动HTTP服务器
     HttpServer server("localhost", 8080, &vector_engine);

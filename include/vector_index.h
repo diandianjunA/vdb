@@ -12,4 +12,7 @@ public:
     std::pair<std::vector<long>, std::vector<float>> search(IndexFactory::IndexType indexType, const std::vector<float>& data, int k);
     void insert(IndexFactory::IndexType indexType, const std::vector<float>& data, uint64_t id);
     void insert_batch(IndexFactory::IndexType indexType, const std::vector<std::vector<float>>& vectors, const std::vector<long>& ids);
+
+    void saveIndex(const std::string& folder_path);
+    void loadIndex(const std::string& folder_path);
 };

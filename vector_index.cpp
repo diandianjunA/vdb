@@ -81,3 +81,11 @@ void VectorIndex::insert_batch(IndexFactory::IndexType indexType, const std::vec
             break;
     }
 }
+
+void VectorIndex::saveIndex(const std::string& folder_path) {
+
+}
+    
+void VectorIndex::loadIndex(const std::string& folder_path) {
+    
+}
