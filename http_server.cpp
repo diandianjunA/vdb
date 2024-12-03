@@ -1,5 +1,4 @@
 #include "include/http_server.h"
-#include "include/constant.h"
 #include "include/logger.h"
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/writer.h"
@@ -52,21 +51,6 @@ void HttpServer::setErrorJsonResponse(httplib::Response&res, int error_code, con
     json_response.AddMember(RESPONSE_RETCODE, error_code, allocator);
     json_response.AddMember(RESPONSE_ERROR_MSG, rapidjson::StringRef(errorMsg.c_str()), allocator);
     setJsonResponse(json_response, res);
-}
-
-IndexFactory::IndexType HttpServer::getIndexTypeFromRequest(const rapidjson::Document& json_request) {
-    // 获取请求参数中的索引类型
-    if (json_request.HasMember(REQUEST_INDEX_TYPE)) {
-        std::string index_type_str = json_request[REQUEST_INDEX_TYPE].GetString();
-        if (index_type_str == INDEX_TYPE_FLAT) {
-            return IndexFactory::IndexType::FLAT;
-        } else if (index_type_str == INDEX_TYPE_HNSW) {
-            return IndexFactory::IndexType::HNSW;
-        } else if (index_type_str == INDEX_TYPE_HNSWFLAT) {
-            return IndexFactory::IndexType::HNSWFLAT;
-        }
-    }
-    return IndexFactory::IndexType::UNKNOWN;
 }
 
 void HttpServer::searchHandler(const httplib::Request& req, httplib::Response& res) {
@@ -276,4 +260,19 @@ void HttpServer::insertBatchHandler(const httplib::Request& req, httplib::Respon
     json_response.AddMember(RESPONSE_RETCODE, RESPONSE_RETCODE_SUCCESS, allocator);
 
     setJsonResponse(json_response, res);
+}
+
+IndexFactory::IndexType getIndexTypeFromRequest(const rapidjson::Document& json_request) {
+    // 获取请求参数中的索引类型
+    if (json_request.HasMember(REQUEST_INDEX_TYPE)) {
+        std::string index_type_str = json_request[REQUEST_INDEX_TYPE].GetString();
+        if (index_type_str == INDEX_TYPE_FLAT) {
+            return IndexFactory::IndexType::FLAT;
+        } else if (index_type_str == INDEX_TYPE_HNSW) {
+            return IndexFactory::IndexType::HNSW;
+        } else if (index_type_str == INDEX_TYPE_HNSWFLAT) {
+            return IndexFactory::IndexType::HNSWFLAT;
+        }
+    }
+    return IndexFactory::IndexType::UNKNOWN;
 }

@@ -1,6 +1,8 @@
 #include "include/flat_index.h"
 #include "include/logger.h"
 #include <faiss/IndexIDMap.h>
+#include <faiss/index_io.h> 
+#include <fstream>
 
 FlatIndex::FlatIndex(faiss::Index* index) : index(index) {}
 
@@ -30,5 +32,22 @@ void FlatIndex::remove_vectors(const std::vector<long>& ids) {
         id_map->remove_ids(selector);
     } else {
         throw std::runtime_error("Underlying Faiss index is not an IndexIDMap");
+    }
+}
+
+void FlatIndex::saveIndex(const std::string& file_path) {
+    faiss::write_index(index, file_path.c_str());
+}
+
+void FlatIndex::loadIndex(const std::string& file_path) {
+    std::ifstream file(file_path);
+    if (file.good()) {
+        file.close();
+        if (index != nullptr) {
+            delete index;
+        }
+        index = faiss::read_index(file_path.c_str());
+    } else {
+        GlobalLogger->warn("File not found: {}. Skipping loading index.", file_path);
     }
 }

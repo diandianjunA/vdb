@@ -11,8 +11,12 @@ public:
     void insert_batch_vectors(const std::vector<std::vector<float>>& vectors, const std::vector<long>& ids);
     void remove_vectors(const std::vector<long>& ids);
     std::pair<std::vector<long>, std::vector<float>> search_vectors(const std::vector<float>& query, int k, int ef_search = 50);
+
+    void saveIndex(const std::string& file_path);
+    void loadIndex(const std::string& file_path);
 private:
     int dim;
     hnswlib::SpaceInterface<float>* space;
     hnswlib::HierarchicalNSW<float>* index;
+    size_t max_elements;
 };

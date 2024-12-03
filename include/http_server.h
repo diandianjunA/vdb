@@ -5,6 +5,7 @@
 #include "vector_engine.h"
 #include "rapidjson/document.h"
 #include <string>
+#include "include/constant.h"
 
 class HttpServer {
 public:
@@ -26,10 +27,11 @@ private:
     void setJsonResponse(const rapidjson::Document& json_response, httplib::Response& res);
     void setErrorJsonResponse(httplib::Response&res, int error_code, const std::string& errorMsg);
     bool isRequestValid(const rapidjson::Document& json_request, CheckType check_type);
-    IndexFactory::IndexType getIndexTypeFromRequest(const rapidjson::Document& json_request);
 
     httplib::Server server;
     std::string host;
     int port;
     VectorEngine* vector_engine_;
 };
+
+IndexFactory::IndexType getIndexTypeFromRequest(const rapidjson::Document& json_request);

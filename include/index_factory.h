@@ -18,6 +18,9 @@ public:
     };
     void init(IndexType type, int dim = 1, int num_data = 0, MetricType metric = MetricType::L2);
     void* getIndex(IndexType type) const;
+
+    void saveIndex(const std::string& folder_path);
+    void loadIndex(const std::string& folder_path);
 private:
     std::map<IndexType, void*> index_map;
 };

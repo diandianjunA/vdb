@@ -83,9 +83,9 @@ void VectorIndex::insert_batch(IndexFactory::IndexType indexType, const std::vec
 }
 
 void VectorIndex::saveIndex(const std::string& folder_path) {
-
+    getGlobalIndexFactory()->saveIndex(folder_path);
 }
     
 void VectorIndex::loadIndex(const std::string& folder_path) {
-    
+    getGlobalIndexFactory()->loadIndex(folder_path);
 }

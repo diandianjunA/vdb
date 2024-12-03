@@ -12,7 +12,13 @@ public:
     void writeWalLog(const std::string& operation_type, const rapidjson::Document& json_data, const std::string& version);
     void readNextWalLog(std::string* operation_type, rapidjson::Document* json_data);
 
+    void takeSnapshot(); 
+    void loadSnapshot();
+    void saveLastSnapshotID();
+    void loadLastSnapshotID();
+
 private:
     uint64_t increaseID_;
     std::fstream wal_log_file_;
-}
+    uint64_t lastSnapshotID_;
+};

@@ -6,7 +6,7 @@
 
 class VectorEngine {
 public:
-    VectorEngine(std::string db_path, VectorIndex* vector_index, VectorStorage* vector_storage);
+    VectorEngine(std::string db_path, std::string wal_path, VectorIndex* vector_index, VectorStorage* vector_storage, WalManager* wal_manager);
     ~VectorEngine();
 
     std::pair<std::vector<long>, std::vector<float>> search(const rapidjson::Document& json_request);

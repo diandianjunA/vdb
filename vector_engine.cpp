@@ -1,8 +1,14 @@
 #include "include/vector_engine.h"
 #include "include/constant.h"
 #include "rapidjson/document.h"
+#include "rapidjson/writer.h"
+#include "rapidjson/stringbuffer.h"
+#include "logger.h"
+#include "http_server.h"
 
-VectorEngine::VectorEngine(std::string db_path, VectorIndex* vector_index, VectorStorage* vector_storage) :db_path(db_path), vector_index_(vector_index), vector_storage_(vector_storage) {}
+VectorEngine::VectorEngine(std::string db_path, std::string wal_path, VectorIndex* vector_index, VectorStorage* vector_storage, WalManager* wal_manager) :db_path(db_path), vector_index_(vector_index), vector_storage_(vector_storage), wal_manager(wal_manager) {
+    wal_manager->init(wal_path);
+}
 
 VectorEngine::~VectorEngine() {
     delete vector_storage_;
@@ -98,4 +104,50 @@ void VectorEngine::insert_batch(const rapidjson::Document& json_request) {
     }
 
     vector_index_->insert_batch(indexType, vectors, ids);
+}
+
+void VectorEngine::reloadDatabase() {
+    GlobalLogger->info("Entering VectorDatabase::reloadDatabase()");
+
+    wal_manager->loadSnapshot();
+    std::string operation_type;
+    rapidjson::Document json_data;
+    wal_manager->readNextWalLog(&operation_type, &json_data);
+
+    while (!operation_type.empty()) {
+        GlobalLogger->info("Operation Type: {}", operation_type);
+
+        // 打印读取的一行内容
+        rapidjson::StringBuffer buffer;
+        rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+        json_data.Accept(writer);
+        GlobalLogger->info("Read Line: {}", buffer.GetString());
+
+       if (operation_type == "upsert") {
+            uint64_t id = json_data[REQUEST_ID].GetUint64();
+            IndexFactory::IndexType index_type = getIndexTypeFromRequest(json_data);
+
+            insert(json_data); // 调用 VectorDatabase::upsert 接口重建数据
+        }
+
+        // 清空 json_data
+        rapidjson::Document().Swap(json_data);
+
+        // 读取下一条 WAL 日志
+        operation_type.clear();
+        wal_manager->readNextWalLog(&operation_type, &json_data);
+    }
+}
+
+void VectorEngine::writeWalLog(const std::string& operation_type, const rapidjson::Document& json_data, const std::string& version) {
+    std::string version = "1.0";
+    wal_manager->writeWalLog(operation_type, json_data, version);
+}
+
+void VectorEngine::takeSnapshot() {
+    wal_manager->takeSnapshot();
+}
+
+void VectorEngine::loadSnapshot() {
+    wal_manager->takeSnapshot();
 }
