@@ -7,6 +7,7 @@ public:
     enum class IndexType {
         FLAT,
         HNSW,
+        HNSWFLAT,
         FILTER,
         UNKNOWN = -1 
     };

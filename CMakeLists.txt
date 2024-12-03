@@ -24,6 +24,7 @@ file(GLOB SOURCES *.h *.cpp include/*.h index/*.cpp log/*.cpp)
 
 include_directories("/usr/local/include/")
 link_directories("./ThirdParty/OpenCV/lib")
+link_directories("/usr/local/lib")
  
 # 生成可执行文件 首位是项目的名称  
 add_executable(vdb vdb_server.cpp ${SOURCES})  

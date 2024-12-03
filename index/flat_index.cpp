@@ -9,6 +9,10 @@ void FlatIndex::insert_vectors(const std::vector<float>& data, uint64_t label) {
     index->add_with_ids(1, data.data(), &id);
 }
 
+void FlatIndex::insert_batch_vectors(const std::vector<std::vector<float>>& vectors, const std::vector<long>& ids) {
+    index->add_with_ids(vectors.size(), vectors.data()->data(), ids.data());
+}
+
 std::pair<std::vector<long>, std::vector<float>> FlatIndex::search_vectors(const std::vector<float>& query, int k) {
     int dim = index->d;
     int num_queries = query.size() / dim;

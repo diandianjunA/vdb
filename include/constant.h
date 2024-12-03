@@ -21,5 +21,6 @@
 
 #define INDEX_TYPE_FLAT "FLAT"
 #define INDEX_TYPE_HNSW "HNSW"
+#define INDEX_TYPE_HNSWFLAT "HNSWFLAT"
 
 #define RESPONSE_CONTENT_TYPE_JSON "application/json"

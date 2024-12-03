@@ -17,6 +17,7 @@ int main() {
     IndexFactory* globalIndexFactory = getGlobalIndexFactory();
     globalIndexFactory->init(IndexFactory::IndexType::FLAT, dim);
     globalIndexFactory->init(IndexFactory::IndexType::HNSW, dim, num_data);
+    globalIndexFactory->init(IndexFactory::IndexType::HNSWFLAT, dim);
 
     VectorIndex vector_index;
     VectorStorage vector_storage("/tmp/vdb");

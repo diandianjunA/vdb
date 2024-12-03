@@ -16,6 +16,13 @@ void HnswIndex::insert_vectors(const std::vector<float>& data, uint64_t id) {
     index->addPoint(data.data(), id);
 }
 
+void HnswIndex::insert_batch_vectors(const std::vector<std::vector<float>>& vectors, const std::vector<long>& ids) {
+    for (int i = 0; i < vectors.size(); i++) {
+        index->addPoint(vectors[i].data(), ids[i]);
+    }
+}
+
+
 std::pair<std::vector<long>, std::vector<float>> HnswIndex::search_vectors(const std::vector<float>& query, int k, int ef_search) {
     index->setEf(ef_search);
 

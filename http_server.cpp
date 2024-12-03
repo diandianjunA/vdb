@@ -62,6 +62,8 @@ IndexFactory::IndexType HttpServer::getIndexTypeFromRequest(const rapidjson::Doc
             return IndexFactory::IndexType::FLAT;
         } else if (index_type_str == INDEX_TYPE_HNSW) {
             return IndexFactory::IndexType::HNSW;
+        } else if (index_type_str == INDEX_TYPE_HNSWFLAT) {
+            return IndexFactory::IndexType::HNSWFLAT;
         }
     }
     return IndexFactory::IndexType::UNKNOWN;

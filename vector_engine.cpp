@@ -24,6 +24,8 @@ std::pair<std::vector<long>, std::vector<float>> VectorEngine::search(const rapi
             indexType = IndexFactory::IndexType::FLAT;
         } else if (index_type_str == INDEX_TYPE_HNSW) {
             indexType = IndexFactory::IndexType::HNSW;
+        } else if (index_type_str == INDEX_TYPE_HNSWFLAT) {
+            indexType = IndexFactory::IndexType::HNSWFLAT;
         }
     }
 
@@ -46,6 +48,8 @@ void VectorEngine::insert(const rapidjson::Document& json_request) {
             indexType = IndexFactory::IndexType::FLAT;
         } else if (index_type_str == INDEX_TYPE_HNSW) {
             indexType = IndexFactory::IndexType::HNSW;
+        } else if (index_type_str == INDEX_TYPE_HNSWFLAT) {
+            indexType = IndexFactory::IndexType::HNSWFLAT;
         }
     }
 
@@ -71,7 +75,7 @@ void VectorEngine::insert_batch(const rapidjson::Document& json_request) {
         vectors.push_back(vector);
     }
 
-    std::vector<int> ids;
+    std::vector<long> ids;
     for (const auto& q : json_request[REQUEST_IDS].GetArray()) {
         ids.push_back(q.GetInt());
     }
@@ -88,10 +92,10 @@ void VectorEngine::insert_batch(const rapidjson::Document& json_request) {
             indexType = IndexFactory::IndexType::FLAT;
         } else if (index_type_str == INDEX_TYPE_HNSW) {
             indexType = IndexFactory::IndexType::HNSW;
+        } else if (index_type_str == INDEX_TYPE_HNSWFLAT) {
+            indexType = IndexFactory::IndexType::HNSWFLAT;
         }
     }
 
-    for (int i = 0; i < vectors.size(); i++) {
-        vector_index_->insert(indexType, vectors[i], ids[i]);
-    }
+    vector_index_->insert_batch(indexType, vectors, ids);
 }

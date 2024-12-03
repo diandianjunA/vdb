@@ -14,7 +14,7 @@ def read_vectors_from_file(file_name, vector_dim=100):
         data = f.read()
     return np.frombuffer(data, dtype=np.float32).reshape(-1, vector_dim)
 
-def post_vector_to_server(vectors, url="http://localhost:8080/insert", index_type="HNSW"):
+def post_vector_to_server(vectors, url="http://localhost:8080/insert", index_type="HNSWFLAT"):
     """
     将向量数据发送到服务器
 
@@ -24,7 +24,7 @@ def post_vector_to_server(vectors, url="http://localhost:8080/insert", index_typ
     """
     for i, vector in enumerate(vectors):
         payload = {
-            "vectors": vector.tolist(),
+            "vector": vector.tolist(),
             "id": i + 1,  # 自定义ID，从1开始
             "index_type": index_type
         }
@@ -37,7 +37,7 @@ def post_vector_to_server(vectors, url="http://localhost:8080/insert", index_typ
         except requests.RequestException as e:
             print(f"Error inserting vector ID {i + 1}: {e}")
 
-def post_vectors_batch_to_server(vectors, batch_size=100, url="http://localhost:8080/insert_batch", index_type="HNSW"):
+def post_vectors_batch_to_server(vectors, batch_size=100, url="http://localhost:8080/insert_batch", index_type="HNSWFLAT"):
     """
     将向量数据批量发送到服务器
 
@@ -71,12 +71,12 @@ if __name__ == "__main__":
     # 向量文件配置
     file_names = [
         # "vector_5MB.bin",
-        "vector_50MB.bin",
+        # "vector_50MB.bin",
         # "vector_100MB.bin",
-        # "vector_500MB.bin"
+        "vector_500MB.bin"
     ]
     
-    # # HTTP 目标 URL
+    # HTTP 目标 URL
     # target_url = "http://localhost:8080/insert"
     # HTTP 目标 URL
     target_url = "http://localhost:8080/insert_batch"
@@ -106,4 +106,5 @@ if __name__ == "__main__":
         vectors = read_vectors_from_file(file_name)
         print(f"Read {len(vectors)} vectors from {file_name}.")
         
+        # post_vector_to_server(vectors, url=target_url)
         post_vectors_batch_to_server(vectors, batch_size=batch_size, url=target_url)
