@@ -50,3 +50,11 @@ void VectorIndex::insert(IndexFactory::IndexType indexType, const std::vector<fl
             break;
     }
 }
+
+void VectorIndex::saveIndex(const std::string& folder_path) {
+
+}
+    
+void VectorIndex::loadIndex(const std::string& folder_path) {
+    
+}
