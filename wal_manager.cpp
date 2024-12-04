@@ -40,7 +40,7 @@ void WalManager::writeWalLog(const std::string& operation_type, const rapidjson:
     if (wal_log_file_.fail()) { // 检查是否发生错误
         GlobalLogger->error("An error occurred while writing the WAL log entry. Reason: {}", std::strerror(errno)); // 使用日志打印错误消息和原因
     } else {
-       GlobalLogger->debug("Wrote WAL log entry: log_id={}, version={}, operation_type={}, json_data_str={}", log_id, version, operation_type, buffer.GetString()); // 打印日志
+    //    GlobalLogger->debug("Wrote WAL log entry: log_id={}, version={}, operation_type={}, json_data_str={}", log_id, version, operation_type, buffer.GetString()); // 打印日志
        wal_log_file_.flush(); // 强制持久化
     }
 }
@@ -65,7 +65,7 @@ void WalManager::readNextWalLog(std::string* operation_type, rapidjson::Document
 
         json_data->Parse(json_data_str.c_str()); // 使用指针参数返回 json_data
 
-        GlobalLogger->debug("Read WAL log entry: log_id={}, operation_type={}, json_data_str={}", log_id_str, *operation_type, json_data_str);
+        // GlobalLogger->debug("Read WAL log entry: log_id={}, operation_type={}, json_data_str={}", log_id_str, *operation_type, json_data_str);
     } else {
         wal_log_file_.clear();
         GlobalLogger->debug("No more WAL log entries to read");

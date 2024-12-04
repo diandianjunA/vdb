@@ -81,7 +81,7 @@ void HttpServer::searchHandler(const httplib::Request& req, httplib::Response& r
 
     // 获取查询参数
     std::vector<float> query;
-    for (const auto& q: json_request[REQUEST_VECTORS].GetArray()) {
+    for (const auto& q: json_request[REQUEST_VECTOR].GetArray()) {
         query.push_back(q.GetFloat());
     }
     int k = json_request[REQUEST_K].GetInt();
