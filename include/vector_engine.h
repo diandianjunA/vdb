@@ -15,7 +15,7 @@ public:
     void insert_batch(const rapidjson::Document& json_request);
 
     void reloadDatabase();
-    void writeWalLog(const std::string& operation_type, const rapidjson::Document& json_data, const std::string& version);
+    void writeWalLog(const std::string& operation_type, const rapidjson::Document& json_data);
 
     void takeSnapshot();
     void loadSnapshot();

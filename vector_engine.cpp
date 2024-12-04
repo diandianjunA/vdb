@@ -60,7 +60,7 @@ void VectorEngine::insert(const rapidjson::Document& json_request) {
     }
 
     vector_index_->insert(indexType, data, id);
-    // vector_storage_->insert(id, json_request);
+    vector_storage_->insert(id, json_request);
 }
 
 rapidjson::Document VectorEngine::query(const rapidjson::Document& json_request) {
@@ -123,11 +123,10 @@ void VectorEngine::reloadDatabase() {
         json_data.Accept(writer);
         GlobalLogger->info("Read Line: {}", buffer.GetString());
 
-       if (operation_type == "upsert") {
-            uint64_t id = json_data[REQUEST_ID].GetUint64();
-            IndexFactory::IndexType index_type = getIndexTypeFromRequest(json_data);
-
+        if (operation_type == "insert") {
             insert(json_data); // 调用 VectorDatabase::upsert 接口重建数据
+        } else if (operation_type == "insert_batch") {
+            insert_batch(json_data);
         }
 
         // 清空 json_data
@@ -139,7 +138,7 @@ void VectorEngine::reloadDatabase() {
     }
 }
 
-void VectorEngine::writeWalLog(const std::string& operation_type, const rapidjson::Document& json_data, const std::string& version) {
+void VectorEngine::writeWalLog(const std::string& operation_type, const rapidjson::Document& json_data) {
     std::string version = "1.0";
     wal_manager->writeWalLog(operation_type, json_data, version);
 }

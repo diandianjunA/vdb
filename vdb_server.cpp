@@ -27,6 +27,7 @@ int main() {
     WalManager wal_manager;
 
     VectorEngine vector_engine(db_path, wal_path, &vector_index, &vector_storage, &wal_manager);
+    vector_engine.reloadDatabase();
 
     // 创建并启动HTTP服务器
     HttpServer server("localhost", 8080, &vector_engine);

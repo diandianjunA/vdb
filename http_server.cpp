@@ -167,6 +167,7 @@ void HttpServer::insertHandler(const httplib::Request& req, httplib::Response& r
     }
 
     vector_engine_->insert(json_request);
+    vector_engine_->writeWalLog("insert", json_request);
 
     // 设置响应
     rapidjson::Document json_response;
@@ -250,6 +251,7 @@ void HttpServer::insertBatchHandler(const httplib::Request& req, httplib::Respon
     }
 
     vector_engine_->insert_batch(json_request);
+    vector_engine_->writeWalLog("insert_batch", json_request);
 
     // 设置响应
     rapidjson::Document json_response;
