@@ -19,8 +19,8 @@ int main() {
     globalIndexFactory->init(IndexFactory::IndexType::HNSW, dim, max_elements);
     globalIndexFactory->init(IndexFactory::IndexType::HNSWFLAT, dim);
 
-    std::string db_path = "/tmp/vdb";
-    std::string wal_path = "/tmp/vdb/wal";
+    std::string db_path = "/data/xjs/vdb";
+    std::string wal_path = "/data/xjs/vdb/wal";
 
     VectorIndex vector_index;
     VectorStorage vector_storage(db_path);

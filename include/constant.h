@@ -5,10 +5,10 @@
 
 
 #define REQUEST_VECTOR "vector"
-#define REQUEST_VECTORS "vectors"
+#define REQUEST_OBJECT "object"
+#define REQUEST_OBJECTS "objects"
 #define REQUEST_K "k"
 #define REQUEST_ID "id"
-#define REQUEST_IDS "ids"
 #define REQUEST_INDEX_TYPE "index_type"
 #define REQUEST_EF_SEARCH "ef_search"
 

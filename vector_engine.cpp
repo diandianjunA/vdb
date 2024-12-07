@@ -41,10 +41,16 @@ std::pair<std::vector<long>, std::vector<float>> VectorEngine::search(const rapi
 void VectorEngine::insert(const rapidjson::Document& json_request) {
     // 从 JSON 请求中获取查询参数
     std::vector<float> data;
-    for (const auto& q : json_request[REQUEST_VECTOR].GetArray()) {
-        data.push_back(q.GetFloat());
+    const rapidjson::Value& object = json_request[REQUEST_OBJECT];
+    if (object.HasMember(REQUEST_VECTOR) && object[REQUEST_VECTOR].IsArray() && object.HasMember(REQUEST_ID) && object[REQUEST_ID].IsInt()) {
+        const rapidjson::Value& vector = object[REQUEST_VECTOR];
+        for (const auto& q : vector.GetArray()) {
+            data.push_back(q.GetFloat());
+        }
+    } else {
+        throw std::runtime_error("Missing vectors or id parameter in the request");
     }
-    int id = json_request[REQUEST_ID].GetInt();
+    int id = object[REQUEST_ID].GetInt();
 
     // 获取请求参数中的索引类型
     IndexFactory::IndexType indexType = IndexFactory::IndexType::UNKNOWN;
@@ -70,20 +76,24 @@ rapidjson::Document VectorEngine::query(const rapidjson::Document& json_request)
 
 void VectorEngine::insert_batch(const rapidjson::Document& json_request) {
     std::vector<std::vector<float>> vectors;
-
-    const rapidjson::Value& t = json_request[REQUEST_VECTORS];
-    for (rapidjson::SizeType i = 0; i < t.Size(); i++) {
-        const rapidjson::Value& row = t[i];
-        std::vector<float> vector;
-        for (rapidjson::SizeType j = 0; j < row.Size(); j++) {
-            vector.push_back(row[j].GetFloat());
-        }
-        vectors.push_back(vector);
-    }
-
     std::vector<long> ids;
-    for (const auto& q : json_request[REQUEST_IDS].GetArray()) {
-        ids.push_back(q.GetInt());
+
+    const rapidjson::Value& objects = json_request[REQUEST_OBJECTS];
+    if (!objects.IsArray()) {
+        throw std::runtime_error("objects type not match");
+    }
+    for (auto& obj : objects.GetArray()) {
+        if (obj.HasMember(REQUEST_VECTOR) && obj[REQUEST_VECTOR].IsArray() && obj.HasMember(REQUEST_ID) && obj[REQUEST_ID].IsInt()) {
+            const rapidjson::Value& row = obj[REQUEST_VECTOR];
+            std::vector<float> vector;
+            for (rapidjson::SizeType j = 0; j < row.Size(); j++) {
+                vector.push_back(row[j].GetFloat());
+            }
+            vectors.push_back(vector);
+            ids.push_back(obj[REQUEST_ID].GetInt());
+        } else {
+            throw std::runtime_error("Missing vectors or id parameter in the request");
+        }
     }
 
     if (vectors.size() != ids.size()) {
@@ -104,6 +114,7 @@ void VectorEngine::insert_batch(const rapidjson::Document& json_request) {
     }
 
     vector_index_->insert_batch(indexType, vectors, ids);
+    vector_storage_->insert_batch(ids, json_request);
 }
 
 void VectorEngine::reloadDatabase() {
@@ -124,7 +135,7 @@ void VectorEngine::reloadDatabase() {
         GlobalLogger->info("Read Line: {}", buffer.GetString());
 
         if (operation_type == "insert") {
-            insert(json_data); // 调用 VectorDatabase::upsert 接口重建数据
+            insert(json_data);
         } else if (operation_type == "insert_batch") {
             insert_batch(json_data);
         }

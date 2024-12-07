@@ -27,11 +27,11 @@ bool HttpServer::isRequestValid(const rapidjson::Document& json_request, CheckTy
         case CheckType::SEARCH:
             return json_request.HasMember(REQUEST_VECTOR) && json_request.HasMember(REQUEST_K) && (!json_request.HasMember(REQUEST_INDEX_TYPE) || json_request[REQUEST_INDEX_TYPE].IsString());
         case CheckType::INSERT:
-            return json_request.HasMember(REQUEST_VECTOR) && json_request.HasMember(REQUEST_ID) && (!json_request.HasMember(REQUEST_INDEX_TYPE) || json_request[REQUEST_INDEX_TYPE].IsString());
+            return json_request.HasMember(REQUEST_OBJECT) && (!json_request.HasMember(REQUEST_INDEX_TYPE) || json_request[REQUEST_INDEX_TYPE].IsString());
         case CheckType::QUERY:
             return json_request.HasMember(REQUEST_ID);
         case CheckType::INSERT_BATCH:
-            return json_request.HasMember(REQUEST_VECTORS) && json_request.HasMember(REQUEST_IDS) && (!json_request.HasMember(REQUEST_INDEX_TYPE) || json_request[REQUEST_INDEX_TYPE].IsString());
+            return json_request.HasMember(REQUEST_OBJECTS) && (!json_request.HasMember(REQUEST_INDEX_TYPE) || json_request[REQUEST_INDEX_TYPE].IsString());
         default:
             return false;
     }

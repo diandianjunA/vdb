@@ -24,8 +24,10 @@ def post_vector_to_server(vectors, url="http://localhost:8080/insert", index_typ
     """
     for i, vector in enumerate(vectors):
         payload = {
-            "vector": vector.tolist(),
-            "id": i + 1,  # 自定义ID，从1开始
+            "object": {
+                "vector": vector.tolist(),
+                "id": i + 1,  # 自定义ID，从1开始
+            },
             "index_type": index_type
         }
         try:
@@ -51,10 +53,12 @@ def post_vectors_batch_to_server(vectors, batch_size=100, url="http://localhost:
         end_idx = min(start_idx + batch_size, total_vectors)
         batch_vectors = vectors[start_idx:end_idx]
         batch_ids = list(range(start_idx + 1, end_idx + 1))  # 自定义ID，从1开始
+        batch_vectors_converted = [vector.astype(float).tolist() for vector in batch_vectors]
         
+        objects = [{"vector": list(vector), "id": id_} for vector, id_ in zip(batch_vectors_converted, batch_ids)]
+
         payload = {
-            "vectors": batch_vectors.tolist(),
-            "ids": batch_ids,
+            "objects": objects,
             "index_type": index_type
         }
         
@@ -78,9 +82,9 @@ if __name__ == "__main__":
     ]
     
     # HTTP 目标 URL
-    target_url = "http://localhost:8080/insert"
+    # target_url = "http://localhost:8080/insert"
     # HTTP 目标 URL
-    # target_url = "http://localhost:8080/insert_batch"
+    target_url = "http://localhost:8080/insert_batch"
     
     # # 逐个文件处理
     # for file_name in file_names:
@@ -107,5 +111,5 @@ if __name__ == "__main__":
         vectors = read_vectors_from_file(file_name)
         print(f"Read {len(vectors)} vectors from {file_name}.")
         
-        post_vector_to_server(vectors, url=target_url)
-        # post_vectors_batch_to_server(vectors, batch_size=batch_size, url=target_url)
+        # post_vector_to_server(vectors, url=target_url)
+        post_vectors_batch_to_server(vectors, batch_size=batch_size, url=target_url)
