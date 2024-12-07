@@ -16,6 +16,18 @@ HttpServer::HttpServer(const std::string& host, int port, VectorEngine* vector_e
     server.Post("/insert_batch", [this](const httplib::Request& req, httplib::Response& res) {
         insertBatchHandler(req, res);
     });
+    server.Post("/admin/addFollower", [this](const httplib::Request& req, httplib::Response& res) {
+        addFollowerHandler(req, res);
+    });
+    server.Post("/admin/snapshot", [this](const httplib::Request& req, httplib::Response& res) { // 添加 /admin/snapshot 请求处理程序
+        snapshotHandler(req, res);
+    });
+    server.Post("/admin/setLeader", [this](const httplib::Request& req, httplib::Response& res) { // 将 /admin/set_leader 更改为驼峰命名
+        setLeaderHandler(req, res);
+    });
+    server.Get("/admin/listNode", [this](const httplib::Request& req, httplib::Response& res) {
+        listNodeHandler(req, res);
+    });
 }
 
 void HttpServer::start() {
@@ -25,13 +37,13 @@ void HttpServer::start() {
 bool HttpServer::isRequestValid(const rapidjson::Document& json_request, CheckType check_type) {
     switch(check_type) {
         case CheckType::SEARCH:
-            return json_request.HasMember(REQUEST_VECTOR) && json_request.HasMember(REQUEST_K) && (!json_request.HasMember(REQUEST_INDEX_TYPE) || json_request[REQUEST_INDEX_TYPE].IsString());
+            return json_request.HasMember(REQUEST_OPERATION) && json_request.HasMember(REQUEST_VECTOR) && json_request.HasMember(REQUEST_K) && (!json_request.HasMember(REQUEST_INDEX_TYPE) || json_request[REQUEST_INDEX_TYPE].IsString());
         case CheckType::INSERT:
-            return json_request.HasMember(REQUEST_OBJECT) && (!json_request.HasMember(REQUEST_INDEX_TYPE) || json_request[REQUEST_INDEX_TYPE].IsString());
+            return json_request.HasMember(REQUEST_OPERATION) && json_request.HasMember(REQUEST_OBJECT) && (!json_request.HasMember(REQUEST_INDEX_TYPE) || json_request[REQUEST_INDEX_TYPE].IsString());
         case CheckType::QUERY:
-            return json_request.HasMember(REQUEST_ID);
+            return json_request.HasMember(REQUEST_OPERATION) && json_request.HasMember(REQUEST_ID);
         case CheckType::INSERT_BATCH:
-            return json_request.HasMember(REQUEST_OBJECTS) && (!json_request.HasMember(REQUEST_INDEX_TYPE) || json_request[REQUEST_INDEX_TYPE].IsString());
+            return json_request.HasMember(REQUEST_OPERATION) && json_request.HasMember(REQUEST_OBJECTS) && (!json_request.HasMember(REQUEST_INDEX_TYPE) || json_request[REQUEST_INDEX_TYPE].IsString());
         default:
             return false;
     }
@@ -166,8 +178,9 @@ void HttpServer::insertHandler(const httplib::Request& req, httplib::Response& r
         return;
     }
 
-    vector_engine_->insert(json_request);
-    vector_engine_->writeWalLog("insert", json_request);
+    // vector_engine_->insert(json_request);
+    // vector_engine_->writeWalLog("insert", json_request);
+    raft_stuff_->appendEntries(req.body);
 
     // 设置响应
     rapidjson::Document json_response;
@@ -261,6 +274,102 @@ void HttpServer::insertBatchHandler(const httplib::Request& req, httplib::Respon
     // 添加retCode到响应
     json_response.AddMember(RESPONSE_RETCODE, RESPONSE_RETCODE_SUCCESS, allocator);
 
+    setJsonResponse(json_response, res);
+}
+
+void HttpServer::addFollowerHandler(const httplib::Request& req, httplib::Response& res) {
+    GlobalLogger->debug("Received addFollower request");
+
+    // 解析JSON请求
+    rapidjson::Document json_request;
+    json_request.Parse(req.body.c_str());
+
+    // 检查JSON文档是否为有效对象
+    if (!json_request.IsObject()) {
+        GlobalLogger->error("Invalid JSON request");
+        res.status = 400;
+        setErrorJsonResponse(res, RESPONSE_RETCODE_ERROR, "Invalid JSON request");
+        return;
+    }
+
+    // 检查当前节点是否为leader
+    if (!raft_stuff_->isLeader()) {
+        GlobalLogger->error("Current node is not the leader");
+        res.status = 400;
+        setErrorJsonResponse(res, RESPONSE_RETCODE_ERROR, "Current node is not the leader");
+        return;
+    }
+
+    // 从JSON请求中获取follower节点信息
+    int node_id = json_request["nodeId"].GetInt();
+    std::string endpoint = json_request["endpoint"].GetString();
+
+    // 调用 RaftStuff 的 addSrv 方法将新的follower节点添加到集群中
+    raft_stuff_->addSrv(node_id, endpoint);
+
+    rapidjson::Document json_response;
+    json_response.SetObject();
+    rapidjson::Document::AllocatorType& allocator = json_response.GetAllocator();
+
+    // 设置响应
+    json_response.AddMember(RESPONSE_RETCODE, RESPONSE_RETCODE_SUCCESS, allocator);
+    setJsonResponse(json_response, res);
+}
+
+void HttpServer::listNodeHandler(const httplib::Request& req, httplib::Response& res) {
+    GlobalLogger->debug("Received listNode request");
+
+    // 获取所有节点信息
+    auto nodes_info = raft_stuff_->getAllNodesInfo();
+
+    rapidjson::Document json_response;
+    json_response.SetObject();
+    rapidjson::Document::AllocatorType& allocator = json_response.GetAllocator();
+
+    // 将节点信息添加到JSON响应中
+    rapidjson::Value nodes_array(rapidjson::kArrayType);
+    for (const auto& node_info : nodes_info) {
+        rapidjson::Value node_object(rapidjson::kObjectType);
+        node_object.AddMember("nodeId", std::get<0>(node_info), allocator);
+        node_object.AddMember("endpoint", rapidjson::Value(std::get<1>(node_info).c_str(), allocator), allocator);
+        node_object.AddMember("state", rapidjson::Value(std::get<2>(node_info).c_str(), allocator), allocator); // 添加节点状态
+        node_object.AddMember("last_log_idx", std::get<3>(node_info), allocator); // 添加节点最后日志索引
+        node_object.AddMember("last_succ_resp_us", std::get<4>(node_info), allocator); // 添加节点最后成功响应时间
+        nodes_array.PushBack(node_object, allocator);
+    }
+    json_response.AddMember("nodes", nodes_array, allocator);
+
+    // 设置响应
+    json_response.AddMember(RESPONSE_RETCODE, RESPONSE_RETCODE_SUCCESS, allocator);
+    setJsonResponse(json_response, res);
+}
+
+void HttpServer::snapshotHandler(const httplib::Request& req, httplib::Response& res) {
+    GlobalLogger->debug("Received snapshot request");
+
+    vector_engine_->takeSnapshot(); // 调用 VectorDatabase::takeSnapshot
+
+    rapidjson::Document json_response;
+    json_response.SetObject();
+    rapidjson::Document::AllocatorType& allocator = json_response.GetAllocator();
+
+    // 设置响应
+    json_response.AddMember(RESPONSE_RETCODE, RESPONSE_RETCODE_SUCCESS, allocator);
+    setJsonResponse(json_response, res);
+}
+
+void HttpServer::setLeaderHandler(const httplib::Request& req, httplib::Response& res) {
+    GlobalLogger->debug("Received setLeader request");
+
+    // 将当前节点设置为主节点
+    raft_stuff_->enableElectionTimeout(10000, 20000);
+
+    rapidjson::Document json_response;
+    json_response.SetObject();
+    rapidjson::Document::AllocatorType& allocator = json_response.GetAllocator();
+
+    // 设置响应
+    json_response.AddMember(RESPONSE_RETCODE, RESPONSE_RETCODE_SUCCESS, allocator);
     setJsonResponse(json_response, res);
 }
 

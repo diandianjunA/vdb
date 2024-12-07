@@ -3,7 +3,7 @@
 #define RESPONSE_VECTORS "vectors"
 #define RESPONSE_DISTANCES "distances"
 
-
+#define REQUEST_OPERATION "operation"
 #define REQUEST_VECTOR "vector"
 #define REQUEST_OBJECT "object"
 #define REQUEST_OBJECTS "objects"

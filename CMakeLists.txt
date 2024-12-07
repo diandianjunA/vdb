@@ -20,7 +20,7 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}
 endif()
 
 # file自定义搜索源文件，塞给集合SOURCES 
-file(GLOB SOURCES *.h *.cpp include/*.h index/*.cpp log/*.cpp)
+file(GLOB SOURCES *.h *.cpp include/*.h index/*.cpp log/*.cpp raft/*.cpp)
 
 include_directories("/usr/local/include/")
 link_directories("./ThirdParty/OpenCV/lib")
@@ -32,5 +32,5 @@ add_executable(vdb vdb_server.cpp ${SOURCES})
 #补充添加链接库，如果需要添加链接库较多，最好这样写
 target_link_libraries(vdb PRIVATE 
 	# faiss openblas pthread rocksdb snappy z bz2 zstd lz4
-    faiss openblas pthread rocksdb
+    faiss openblas pthread rocksdb nuraft
 )

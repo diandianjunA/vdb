@@ -154,10 +154,22 @@ void VectorEngine::writeWalLog(const std::string& operation_type, const rapidjso
     wal_manager->writeWalLog(operation_type, json_data, version);
 }
 
+void VectorEngine::writeWALLogWithID(uint64_t log_id, const std::string& data) {
+    rapidjson::Document json_data;
+    json_data.Parse(data.c_str());
+    std::string operation_type = json_data[REQUEST_OPERATION].GetString();
+    std::string version = "1.0";
+    wal_manager->writeWALRawLog(log_id, operation_type, data, version);
+}
+
 void VectorEngine::takeSnapshot() {
     wal_manager->takeSnapshot();
 }
 
 void VectorEngine::loadSnapshot() {
     wal_manager->takeSnapshot();
+}
+
+int64_t VectorEngine::getStartIndexID() const {
+    return wal_manager->getID();
 }

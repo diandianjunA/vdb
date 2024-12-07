@@ -16,6 +16,8 @@ public:
 
     void reloadDatabase();
     void writeWalLog(const std::string& operation_type, const rapidjson::Document& json_data);
+    void writeWALLogWithID(uint64_t log_id, const std::string& data);
+    int64_t getStartIndexID() const;
 
     void takeSnapshot();
     void loadSnapshot();

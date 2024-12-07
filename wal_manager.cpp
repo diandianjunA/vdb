@@ -45,6 +45,17 @@ void WalManager::writeWalLog(const std::string& operation_type, const rapidjson:
     }
 }
 
+void WalManager::writeWALRawLog(uint64_t log_id, const std::string& operation_type, const std::string& raw_data, const std::string& version) {
+    wal_log_file_ << log_id << "|" << version << "|" << operation_type << "|" << raw_data << std::endl; // 将 version 添加到日志格式中
+
+    if (wal_log_file_.fail()) { // 检查是否发生错误
+        GlobalLogger->error("An error occurred while writing the WAL raw log entry. Reason: {}", std::strerror(errno)); // 使用日志打印错误消息和原因
+    } else {
+       GlobalLogger->debug("Wrote WAL raw log entry: log_id={}, version={}, operation_type={}, raw_data={}", log_id, version, operation_type, raw_data); // 打印日志
+       wal_log_file_.flush(); // 强制持久化
+    }
+}
+
 void WalManager::readNextWalLog(std::string* operation_type, rapidjson::Document* json_data) {
     GlobalLogger->debug("Reading next WAL log entry");
 
