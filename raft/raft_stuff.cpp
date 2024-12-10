@@ -1,11 +1,11 @@
 #include "include/raft_stuff.h"
 
-RaftStuff::RaftStuff(int node_id, const std::string& endpoint, int port) : node_id(node_id), endpoint(endpoint), port_(port) {
+RaftStuff::RaftStuff(int node_id, const std::string& endpoint, int port, VectorEngine* vector_engine) : node_id(node_id), endpoint(endpoint), port_(port), vector_engine_(vector_engine) {
     Init();
 }
 
 void RaftStuff::Init() {
-    smgr_ = cs_new<inmem_state_mgr>(node_id, endpoint);
+    smgr_ = cs_new<inmem_state_mgr>(node_id, endpoint, vector_engine_);
     sm_ = cs_new<log_state_machine>();
 
     asio_service::options asio_opt;

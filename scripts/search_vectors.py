@@ -10,6 +10,7 @@ def query_vectors(id, url="http://localhost:8080/query", index_type="HNSWFLAT"):
     :param index_type: 索引类型
     """
     payload = {
+        "operation": "query",
         "id": id,
         "index_type": index_type
     }
@@ -32,6 +33,7 @@ def search_vectors(vector, k, url="http://localhost:8080/search", index_type="HN
     :param index_type: 索引类型
     """
     payload = {
+        "operation": "search",
         "vector": vector,
         "k": k,
         "index_type": index_type

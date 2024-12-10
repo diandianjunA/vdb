@@ -19,8 +19,14 @@ int main() {
     globalIndexFactory->init(IndexFactory::IndexType::HNSW, dim, max_elements);
     globalIndexFactory->init(IndexFactory::IndexType::HNSWFLAT, dim);
 
-    std::string db_path = "/data/xjs/vdb";
-    std::string wal_path = "/data/xjs/vdb/wal";
+    std::string base_path = "/tmp";
+    // std::string base_path = "/data/xjs";
+
+    std::string db_path = base_path + "/vdb";
+    std::string wal_path = base_path + "/vdb/wal";
+    int node_id = 1;
+    std::string endpoint = "127.0.0.1:8081";
+    int port = 8081;
 
     VectorIndex vector_index;
     VectorStorage vector_storage(db_path);
@@ -29,8 +35,10 @@ int main() {
     VectorEngine vector_engine(db_path, wal_path, &vector_index, &vector_storage, &wal_manager);
     vector_engine.reloadDatabase();
 
+    RaftStuff raft_stuff(node_id, endpoint, port, &vector_engine);
+
     // 创建并启动HTTP服务器
-    HttpServer server("localhost", 8080, &vector_engine);
+    HttpServer server("localhost", 8080, &vector_engine, &raft_stuff);
     GlobalLogger->info("HttpServer created");
     server.start();
 

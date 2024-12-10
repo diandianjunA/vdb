@@ -17,7 +17,7 @@ public:
         INSERT_BATCH
     };
 
-    HttpServer(const std::string& host, int port, VectorEngine* vector_engine);
+    HttpServer(const std::string& host, int port, VectorEngine* vector_engine, RaftStuff* raft_stuff);
     void start();
 
 private:

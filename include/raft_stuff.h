@@ -7,7 +7,7 @@
 
 class RaftStuff {
 public:
-    RaftStuff(int node_id, const std::string& endpoint, int port);
+    RaftStuff(int node_id, const std::string& endpoint, int port, VectorEngine* vector_engine);
 
     void Init();
     ptr<cmd_result<ptr<buffer>>> addSrv(int srv_id, const std::string& srv_endpoint);
@@ -25,4 +25,5 @@ private:
     int port_;
     raft_launcher launcher_;
     ptr<raft_server> raft_instance_;
+    VectorEngine* vector_engine_;
 };

@@ -94,12 +94,12 @@ ulong inmem_log_store::append(ptr<log_entry>& entry) {
     if (entry->get_val_type() == log_val_type::app_log) {
         buffer& data = clone->get_buf();
         std::string content(reinterpret_cast<const char*>(data.data() + data.pos()+sizeof(int)), data.size()-sizeof(int));
-        GlobalLogger->debug("Append app logs {}, content: {}, value type {}", idx, content, entry->get_val_type()); // 添加打印日志
+        GlobalLogger->debug("Append app logs {}, content: {}", idx, content); // 添加打印日志
         vector_engine_->writeWALLogWithID(idx, content);
     } else {
         buffer& data = clone->get_buf();
         std::string content(reinterpret_cast<const char*>(data.data() + data.pos()), data.size());
-        GlobalLogger->debug("Append other logs {}, content: {}, value type {}", idx, content, entry->get_val_type()); // 添加打印日志
+        GlobalLogger->debug("Append other logs {}, content: {}", idx, content); // 添加打印日志
     }
 
     if (disk_emul_delay) {

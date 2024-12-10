@@ -25,6 +25,7 @@ def post_vector_to_server(vectors, url="http://localhost:8080/insert", index_typ
     for i, vector in enumerate(vectors):
         payload = {
             "object": {
+                "operation": "insert",
                 "vector": vector.tolist(),
                 "id": i + 1,  # 自定义ID，从1开始
             },
@@ -39,7 +40,7 @@ def post_vector_to_server(vectors, url="http://localhost:8080/insert", index_typ
         except requests.RequestException as e:
             print(f"Error inserting vector ID {i + 1}: {e}")
 
-def post_vectors_batch_to_server(vectors, batch_size=100, url="http://localhost:8080/insert_batch", index_type="HNSWFLAT"):
+def post_vectors_batch_to_server(vectors, batch_size=100, url="http://localhost:8080/insertBatch", index_type="HNSWFLAT"):
     """
     将向量数据批量发送到服务器
 
@@ -58,6 +59,7 @@ def post_vectors_batch_to_server(vectors, batch_size=100, url="http://localhost:
         objects = [{"vector": list(vector), "id": id_} for vector, id_ in zip(batch_vectors_converted, batch_ids)]
 
         payload = {
+            "operation": "insert_batch",
             "objects": objects,
             "index_type": index_type
         }
@@ -84,7 +86,7 @@ if __name__ == "__main__":
     # HTTP 目标 URL
     # target_url = "http://localhost:8080/insert"
     # HTTP 目标 URL
-    target_url = "http://localhost:8080/insert_batch"
+    target_url = "http://localhost:8080/insertBatch"
     
     # # 逐个文件处理
     # for file_name in file_names:

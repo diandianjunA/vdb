@@ -3,7 +3,7 @@
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/writer.h"
 
-HttpServer::HttpServer(const std::string& host, int port, VectorEngine* vector_engine): host(host), port(port), vector_engine_(vector_engine) {
+HttpServer::HttpServer(const std::string& host, int port, VectorEngine* vector_engine, RaftStuff* raft_stuff): host(host), port(port), vector_engine_(vector_engine), raft_stuff_(raft_stuff) {
     server.Post("/search", [this](const httplib::Request& req, httplib::Response& res) {
         searchHandler(req, res);
     });
@@ -13,16 +13,16 @@ HttpServer::HttpServer(const std::string& host, int port, VectorEngine* vector_e
     server.Post("/query", [this](const httplib::Request& req, httplib::Response& res) {
         queryHandler(req, res);
     });
-    server.Post("/insert_batch", [this](const httplib::Request& req, httplib::Response& res) {
+    server.Post("/insertBatch", [this](const httplib::Request& req, httplib::Response& res) {
         insertBatchHandler(req, res);
     });
     server.Post("/admin/addFollower", [this](const httplib::Request& req, httplib::Response& res) {
         addFollowerHandler(req, res);
     });
-    server.Post("/admin/snapshot", [this](const httplib::Request& req, httplib::Response& res) { // 添加 /admin/snapshot 请求处理程序
+    server.Post("/admin/snapshot", [this](const httplib::Request& req, httplib::Response& res) {
         snapshotHandler(req, res);
     });
-    server.Post("/admin/setLeader", [this](const httplib::Request& req, httplib::Response& res) { // 将 /admin/set_leader 更改为驼峰命名
+    server.Post("/admin/setLeader", [this](const httplib::Request& req, httplib::Response& res) {
         setLeaderHandler(req, res);
     });
     server.Get("/admin/listNode", [this](const httplib::Request& req, httplib::Response& res) {
