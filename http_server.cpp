@@ -44,6 +44,14 @@ bool HttpServer::isRequestValid(const rapidjson::Document& json_request, CheckTy
             return json_request.HasMember(REQUEST_OPERATION) && json_request.HasMember(REQUEST_ID);
         case CheckType::INSERT_BATCH:
             return json_request.HasMember(REQUEST_OPERATION) && json_request.HasMember(REQUEST_OBJECTS) && (!json_request.HasMember(REQUEST_INDEX_TYPE) || json_request[REQUEST_INDEX_TYPE].IsString());
+        case CheckType::ADMIN_ADD_FOLLOWER:
+            return json_request.HasMember(REQUEST_OPERATION) && json_request.HasMember(REQUEST_NODE_ID) && json_request.HasMember(REQUEST_ENDPOINT);
+        case CheckType::ADMIN_SET_LEADER:
+            return json_request.HasMember(REQUEST_OPERATION);
+        case CheckType::ADMIN_SNAPSHOT:
+            return json_request.HasMember(REQUEST_OPERATION);
+        case CheckType::ADMIN_LIST_NODE:
+            return json_request.HasMember(REQUEST_OPERATION);
         default:
             return false;
     }
@@ -160,7 +168,7 @@ void HttpServer::insertHandler(const httplib::Request& req, httplib::Response& r
     }
 
     // 检查请求的合法性
-    if (!isRequestValid(json_request, CheckType::INSERT)) { // 添加对isRequestValid的调用
+    if (!isRequestValid(json_request, CheckType::INSERT)) {
         GlobalLogger->error("Missing vectors or id parameter in the request");
         res.status = 400;
         setErrorJsonResponse(res, RESPONSE_RETCODE_ERROR, "Missing vectors or k parameter in the request");
@@ -263,8 +271,9 @@ void HttpServer::insertBatchHandler(const httplib::Request& req, httplib::Respon
         return;
     }
 
-    vector_engine_->insert_batch(json_request);
-    vector_engine_->writeWalLog("insert_batch", json_request);
+    // vector_engine_->insert_batch(json_request);
+    // vector_engine_->writeWalLog("insert_batch", json_request);
+    raft_stuff_->appendEntries(req.body);
 
     // 设置响应
     rapidjson::Document json_response;
@@ -301,8 +310,8 @@ void HttpServer::addFollowerHandler(const httplib::Request& req, httplib::Respon
     }
 
     // 从JSON请求中获取follower节点信息
-    int node_id = json_request["nodeId"].GetInt();
-    std::string endpoint = json_request["endpoint"].GetString();
+    int node_id = json_request[REQUEST_NODE_ID].GetInt();
+    std::string endpoint = json_request[REQUEST_ENDPOINT].GetString();
 
     // 调用 RaftStuff 的 addSrv 方法将新的follower节点添加到集群中
     raft_stuff_->addSrv(node_id, endpoint);
@@ -347,7 +356,7 @@ void HttpServer::listNodeHandler(const httplib::Request& req, httplib::Response&
 void HttpServer::snapshotHandler(const httplib::Request& req, httplib::Response& res) {
     GlobalLogger->debug("Received snapshot request");
 
-    vector_engine_->takeSnapshot(); // 调用 VectorDatabase::takeSnapshot
+    vector_engine_->takeSnapshot();
 
     rapidjson::Document json_response;
     json_response.SetObject();

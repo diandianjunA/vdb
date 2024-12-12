@@ -14,7 +14,11 @@ public:
         SEARCH,
         INSERT,
         QUERY,
-        INSERT_BATCH
+        INSERT_BATCH,
+        ADMIN_ADD_FOLLOWER,
+        ADMIN_SNAPSHOT,
+        ADMIN_SET_LEADER,
+        ADMIN_LIST_NODE
     };
 
     HttpServer(const std::string& host, int port, VectorEngine* vector_engine, RaftStuff* raft_stuff);

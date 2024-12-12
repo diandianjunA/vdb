@@ -11,6 +11,8 @@
 #define REQUEST_ID "id"
 #define REQUEST_INDEX_TYPE "index_type"
 #define REQUEST_EF_SEARCH "ef_search"
+#define REQUEST_NODE_ID "nodeId"
+#define REQUEST_ENDPOINT "endpoint"
 
 #define RESPONSE_RETCODE "retCode"
 #define RESPONSE_RETCODE_SUCCESS 0
