@@ -188,7 +188,22 @@ void HttpServer::insertHandler(const httplib::Request& req, httplib::Response& r
 
     // vector_engine_->insert(json_request);
     // vector_engine_->writeWalLog("insert", json_request);
-    raft_stuff_->appendEntries(req.body);
+    auto cmd_result = raft_stuff_->appendEntries(req.body);
+    if (cmd_result->get_result_code() == 0) {
+        GlobalLogger->debug("insert successfully");
+        rapidjson::Document json_response;
+        json_response.SetObject();
+        rapidjson::Document::AllocatorType& allocator = json_response.GetAllocator();
+
+        // 设置响应
+        json_response.AddMember(RESPONSE_RETCODE, RESPONSE_RETCODE_SUCCESS, allocator);
+        setJsonResponse(json_response, res);
+    } else {
+        GlobalLogger->debug("insert error: {}", cmd_result->get_result_str());
+        res.status = 400;
+        setErrorJsonResponse(res, RESPONSE_RETCODE_ERROR, cmd_result->get_result_str());
+        return;
+    }
 
     // 设置响应
     rapidjson::Document json_response;
@@ -273,7 +288,22 @@ void HttpServer::insertBatchHandler(const httplib::Request& req, httplib::Respon
 
     // vector_engine_->insert_batch(json_request);
     // vector_engine_->writeWalLog("insert_batch", json_request);
-    raft_stuff_->appendEntries(req.body);
+    auto cmd_result = raft_stuff_->appendEntries(req.body);
+    if (cmd_result->get_result_code() == 0) {
+        GlobalLogger->debug("insert batch successfully");
+        rapidjson::Document json_response;
+        json_response.SetObject();
+        rapidjson::Document::AllocatorType& allocator = json_response.GetAllocator();
+
+        // 设置响应
+        json_response.AddMember(RESPONSE_RETCODE, RESPONSE_RETCODE_SUCCESS, allocator);
+        setJsonResponse(json_response, res);
+    } else {
+        GlobalLogger->debug("insert batch error: {}", cmd_result->get_result_str());
+        res.status = 400;
+        setErrorJsonResponse(res, RESPONSE_RETCODE_ERROR, cmd_result->get_result_str());
+        return;
+    }
 
     // 设置响应
     rapidjson::Document json_response;
@@ -314,15 +344,22 @@ void HttpServer::addFollowerHandler(const httplib::Request& req, httplib::Respon
     std::string endpoint = json_request[REQUEST_ENDPOINT].GetString();
 
     // 调用 RaftStuff 的 addSrv 方法将新的follower节点添加到集群中
-    raft_stuff_->addSrv(node_id, endpoint);
+    auto cmd_result = raft_stuff_->addSrv(node_id, endpoint).get();
+    if (cmd_result->get_result_code() == 0) {
+        GlobalLogger->debug("addFollower successfully");
+        rapidjson::Document json_response;
+        json_response.SetObject();
+        rapidjson::Document::AllocatorType& allocator = json_response.GetAllocator();
 
-    rapidjson::Document json_response;
-    json_response.SetObject();
-    rapidjson::Document::AllocatorType& allocator = json_response.GetAllocator();
-
-    // 设置响应
-    json_response.AddMember(RESPONSE_RETCODE, RESPONSE_RETCODE_SUCCESS, allocator);
-    setJsonResponse(json_response, res);
+        // 设置响应
+        json_response.AddMember(RESPONSE_RETCODE, RESPONSE_RETCODE_SUCCESS, allocator);
+        setJsonResponse(json_response, res);
+    } else {
+        GlobalLogger->debug("addFollower error: {}", cmd_result->get_result_str());
+        res.status = 400;
+        setErrorJsonResponse(res, RESPONSE_RETCODE_ERROR, cmd_result->get_result_str());
+        return;
+    }
 }
 
 void HttpServer::listNodeHandler(const httplib::Request& req, httplib::Response& res) {

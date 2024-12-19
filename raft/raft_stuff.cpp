@@ -6,14 +6,12 @@ RaftStuff::RaftStuff(int node_id, const std::string& endpoint, int port, VectorE
 
 void RaftStuff::Init() {
     smgr_ = cs_new<inmem_state_mgr>(node_id, endpoint, vector_engine_);
-    sm_ = cs_new<log_state_machine>();
+    sm_ = cs_new<log_state_machine>(vector_engine_);
 
     asio_service::options asio_opt;
     asio_opt.thread_pool_size_ = 1;
 
     raft_params params;
-    params.election_timeout_lower_bound_ = 100000000; // 设置为一个非常大的值
-    params.election_timeout_upper_bound_ = 200000000; // 设置为一个非常大的值
 
     raft_instance_ = launcher_.init(sm_, smgr_, nullptr, port_, asio_opt, params);
     GlobalLogger->debug("RaftStuff initialized with node_id: {}, endpoint: {}, port: {}", node_id, endpoint, port_); // 添加打印日志

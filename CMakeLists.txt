@@ -20,17 +20,26 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}
 endif()
 
 # file自定义搜索源文件，塞给集合SOURCES 
-file(GLOB SOURCES *.h *.cpp include/*.h index/*.cpp log/*.cpp raft/*.cpp)
+file(GLOB VDB_SERVER_SOURCES vdb_server/*.cpp include/*.h index/*.cpp log/*.cpp raft/*.cpp)
+file(GLOB MASTER_SERVER_SOURCES master_server/*.cpp log/*.cpp)
+file(GLOB PROXY_SERVER_SOURCES proxy_server/*.cpp log/*.cpp)
 
 include_directories("/usr/local/include/")
 link_directories("./ThirdParty/OpenCV/lib")
+link_directories("/usr/lib/x86_64-linux-gnu")
 link_directories("/usr/local/lib")
- 
-# 生成可执行文件 首位是项目的名称  
-add_executable(vdb vdb_server.cpp ${SOURCES})  
- 
-#补充添加链接库，如果需要添加链接库较多，最好这样写
-target_link_libraries(vdb PRIVATE 
-	# faiss openblas pthread rocksdb snappy z bz2 zstd lz4
-    faiss openblas pthread rocksdb nuraft ssl
+
+add_executable(vdb_server vdb_server.cpp ${VDB_SERVER_SOURCES})
+add_executable(master_server master_server.cpp ${MASTER_SERVER_SOURCES})
+add_executable(proxy_server proxy_server.cpp ${PROXY_SERVER_SOURCES})
+
+target_link_libraries(vdb_server PRIVATE 
+    faiss openblas pthread rocksdb snappy z bz2 zstd lz4 nuraft ssl
+    # faiss openblas pthread rocksdb nuraft ssl
+)
+target_link_libraries(master_server PRIVATE
+    etcd-cpp-api cpprest
+)
+target_link_libraries(proxy_server PRIVATE
+    curl pthread
 )

@@ -8,9 +8,8 @@ using namespace nuraft;
 
 class log_state_machine : public state_machine {
 public:
-    log_state_machine(): last_committed_idx_(0){}
+    log_state_machine(VectorEngine* vector_engine);
     ~log_state_machine() {}
-    void setVectorEngine(VectorEngine* vector_engine);
     ptr<buffer> commit(const ulong log_idx, buffer& data);
 
     ptr<buffer> pre_commit(const ulong log_idx, buffer& data);

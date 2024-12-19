@@ -55,7 +55,34 @@ def add_follower(nodeId, endpoint, url="http://localhost:8080/admin/addFollower"
     except requests.RequestException as e:
         print(f"Error add follower: {e}")
 
+def insert(vector, id, url="http://localhost:8080/insert", index_type="FLAT"):
+    """
+    将向量数据发送到服务器
+
+    :param vectors: 要插入的向量（numpy array）
+    :param url: 插入向量的URL
+    :param index_type: 索引类型
+    """
+    payload = {
+        "operation": "insert",
+        "object": {
+            "vector": vector,
+            "id": id
+        },
+        "index_type": index_type
+    }
+    try:
+        response = requests.post(url, json=payload)
+        if response.status_code == 200:
+            print(f"Inserted vector ID {id} successfully.")
+        else:
+            print(f"Failed to insert vector ID {id}. Status code: {response.status_code}, Response: {response.text}")
+    except requests.RequestException as e:
+        print(f"Error inserting vector ID {id}: {e}")
+
 if __name__ == "__main__":
-    list_node()
+    # list_node()
     # set_leader()
     # add_follower(2, '127.0.0.1:9091')
+    vector = [22]
+    insert(vector, 5)

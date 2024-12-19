@@ -139,7 +139,7 @@ void inmem_log_store::write_at(ulong index, ptr<log_entry>& entry) {
     }
 }
 
-ptr< std::vector< ptr<log_entry> > >
+ptr<std::vector<ptr<log_entry>>>
     inmem_log_store::log_entries(ulong start, ulong end)
 {
     ptr< std::vector< ptr<log_entry> > > ret =
