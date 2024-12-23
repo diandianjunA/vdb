@@ -1,4 +1,4 @@
-#include "include/proxy_server.h"
+#include "include/proxy_http_server.h"
 #include "include/logger.h"
 
 int main() {
@@ -11,7 +11,7 @@ int main() {
     int proxy_port = 6061;                   // 代理服务器监听端口
 
     GlobalLogger->info("Starting ProxyServer...");
-    ProxyServer proxy(master_host, master_port, instance_id);
+    ProxyHttpServer proxy(master_host, master_port, instance_id);
     GlobalLogger->info("Starting Proxy Server on port {}", proxy_port);
     GlobalLogger->info("Proxy server created");
     proxy.start(proxy_port);

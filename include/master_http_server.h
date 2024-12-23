@@ -16,9 +16,9 @@ struct ServerInfo {
     static ServerInfo fromJson(const rapidjson::Document& value);
 };
 
-class MasterServer {
+class MasterHttpServer {
 public:
-    explicit MasterServer(const std::string& etcdEndpoints, int httpPort);
+    explicit MasterHttpServer(const std::string& etcdEndpoints, int httpPort);
     void run();
 
 private:

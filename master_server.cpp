@@ -1,4 +1,4 @@
-#include "include/master_server.h"
+#include "include/master_http_server.h"
 #include "include/logger.h"
 
 int main() {
@@ -11,7 +11,7 @@ int main() {
     GlobalLogger->info("Global logger initialized");
 
     try {
-        MasterServer masterServer(etcdEndpoints, httpPort);
+        MasterHttpServer masterServer(etcdEndpoints, httpPort);
         GlobalLogger->info("Starting Master Server on port {}", httpPort);
         GlobalLogger->info("Master Server created");
         masterServer.run();

@@ -4,9 +4,9 @@
 #include "rapidjson/writer.h"
 #include "rapidjson/stringbuffer.h"
 #include "logger.h"
-#include "http_server.h"
+#include "vdb_http_server.h"
 
-VectorEngine::VectorEngine(std::string db_path, std::string wal_path, VectorIndex* vector_index, VectorStorage* vector_storage, WalManager* wal_manager) :db_path(db_path), vector_index_(vector_index), vector_storage_(vector_storage), wal_manager(wal_manager) {
+VectorEngine::VectorEngine(std::string db_path, std::string wal_path, VectorIndex* vector_index, VectorStorage* vector_storage, WalManager* wal_manager, ServerType server_type) :db_path(db_path), vector_index_(vector_index), vector_storage_(vector_storage), wal_manager(wal_manager), server_type(server_type) {
     wal_manager->init(wal_path);
 }
 
@@ -15,6 +15,9 @@ VectorEngine::~VectorEngine() {
 }
 
 std::pair<std::vector<long>, std::vector<float>> VectorEngine::search(const rapidjson::Document& json_request) {
+    if (server_type == ServerType::STORAGE) {
+        throw std::runtime_error("This is storage node, cannot handle search!");
+    }
     // 从 JSON 请求中获取查询参数
     std::vector<float> data;
     for (const auto& q : json_request[REQUEST_VECTOR].GetArray()) {
@@ -65,11 +68,18 @@ void VectorEngine::insert(const rapidjson::Document& json_request) {
         }
     }
 
-    vector_index_->insert(indexType, data, id);
-    vector_storage_->insert(id, json_request);
+    if (server_type == ServerType::INDEX || server_type == ServerType::VDB) {
+        vector_index_->insert(indexType, data, id);
+    }
+    if (server_type == ServerType::STORAGE || server_type == ServerType::VDB) {
+        vector_storage_->insert(id, json_request);
+    }
 }
 
 rapidjson::Document VectorEngine::query(const rapidjson::Document& json_request) {
+    if (server_type == ServerType::INDEX) {
+        throw std::runtime_error("This is index node, cannot handle query!");
+    }
     int id = json_request[REQUEST_ID].GetInt();
     return vector_storage_->query(id);
 }
@@ -113,12 +123,18 @@ void VectorEngine::insert_batch(const rapidjson::Document& json_request) {
         }
     }
 
-    vector_index_->insert_batch(indexType, vectors, ids);
-    vector_storage_->insert_batch(ids, json_request);
+    if (server_type == ServerType::INDEX || server_type == ServerType::VDB) {
+        vector_index_->insert_batch(indexType, vectors, ids);
+    }
+    if (server_type == ServerType::STORAGE || server_type == ServerType::VDB) {
+        vector_storage_->insert_batch(ids, json_request);
+    }
 }
 
 void VectorEngine::reloadDatabase() {
-    GlobalLogger->info("Entering VectorDatabase::reloadDatabase()");
+    if (server_type == ServerType::STORAGE) {
+        return;
+    }
 
     wal_manager->loadSnapshot();
     std::string operation_type;
@@ -163,10 +179,16 @@ void VectorEngine::writeWALLogWithID(uint64_t log_id, const std::string& data) {
 }
 
 void VectorEngine::takeSnapshot() {
+    if (server_type == ServerType::STORAGE) {
+        throw std::runtime_error("This is storage node, cannot taking snapshot!");
+    }
     wal_manager->takeSnapshot();
 }
 
 void VectorEngine::loadSnapshot() {
+    if (server_type == ServerType::STORAGE) {
+        throw std::runtime_error("This is storage node, cannot loading snapshot!");
+    }
     wal_manager->takeSnapshot();
 }
 

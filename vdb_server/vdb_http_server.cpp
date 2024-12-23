@@ -1,9 +1,9 @@
-#include "include/http_server.h"
+#include "include/vdb_http_server.h"
 #include "include/logger.h"
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/writer.h"
 
-HttpServer::HttpServer(const std::string& host, int port, VectorEngine* vector_engine, RaftStuff* raft_stuff): host(host), port(port), vector_engine_(vector_engine), raft_stuff_(raft_stuff) {
+VdbHttpServer::VdbHttpServer(const std::string& host, int port, VectorEngine* vector_engine, RaftStuff* raft_stuff): host(host), port(port), vector_engine_(vector_engine), raft_stuff_(raft_stuff) {
     server.Post("/search", [this](const httplib::Request& req, httplib::Response& res) {
         searchHandler(req, res);
     });
@@ -27,11 +27,11 @@ HttpServer::HttpServer(const std::string& host, int port, VectorEngine* vector_e
     });
 }
 
-void HttpServer::start() {
+void VdbHttpServer::start() {
     server.listen(host.c_str(), port);
 }
 
-bool HttpServer::isRequestValid(const rapidjson::Document& json_request, CheckType check_type) {
+bool VdbHttpServer::isRequestValid(const rapidjson::Document& json_request, CheckType check_type) {
     switch(check_type) {
         case CheckType::SEARCH:
             return json_request.HasMember(REQUEST_OPERATION) && json_request.HasMember(REQUEST_VECTOR) && json_request.HasMember(REQUEST_K) && (!json_request.HasMember(REQUEST_INDEX_TYPE) || json_request[REQUEST_INDEX_TYPE].IsString());
@@ -54,14 +54,14 @@ bool HttpServer::isRequestValid(const rapidjson::Document& json_request, CheckTy
     }
 }
 
-void HttpServer::setJsonResponse(const rapidjson::Document& json_response, httplib::Response& res) {
+void VdbHttpServer::setJsonResponse(const rapidjson::Document& json_response, httplib::Response& res) {
     rapidjson::StringBuffer buffer;
     rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
     json_response.Accept(writer);
     res.set_content(buffer.GetString(), RESPONSE_CONTENT_TYPE_JSON);
 }
 
-void HttpServer::setErrorJsonResponse(httplib::Response&res, int error_code, const std::string& errorMsg) {
+void VdbHttpServer::setErrorJsonResponse(httplib::Response&res, int error_code, const std::string& errorMsg) {
     rapidjson::Document json_response;
     json_response.SetObject();
     rapidjson::Document::AllocatorType& allocator = json_response.GetAllocator();
@@ -70,7 +70,7 @@ void HttpServer::setErrorJsonResponse(httplib::Response&res, int error_code, con
     setJsonResponse(json_response, res);
 }
 
-void HttpServer::searchHandler(const httplib::Request& req, httplib::Response& res) {
+void VdbHttpServer::searchHandler(const httplib::Request& req, httplib::Response& res) {
     GlobalLogger->debug("Received search request");
 
     // 解析json请求
@@ -146,7 +146,7 @@ void HttpServer::searchHandler(const httplib::Request& req, httplib::Response& r
     setJsonResponse(json_response, res);
 }
 
-void HttpServer::insertHandler(const httplib::Request& req, httplib::Response& res) {
+void VdbHttpServer::insertHandler(const httplib::Request& req, httplib::Response& res) {
     GlobalLogger->debug("Received insert request");
 
     // 解析JSON请求
@@ -213,7 +213,7 @@ void HttpServer::insertHandler(const httplib::Request& req, httplib::Response& r
     setJsonResponse(json_response, res);
 }
 
-void HttpServer::queryHandler(const httplib::Request& req, httplib::Response& res) {
+void VdbHttpServer::queryHandler(const httplib::Request& req, httplib::Response& res) {
     GlobalLogger->debug("Received query request");
 
     // 解析JSON请求
@@ -257,7 +257,7 @@ void HttpServer::queryHandler(const httplib::Request& req, httplib::Response& re
     setJsonResponse(json_response, res);
 }
 
-void HttpServer::insertBatchHandler(const httplib::Request& req, httplib::Response& res) {
+void VdbHttpServer::insertBatchHandler(const httplib::Request& req, httplib::Response& res) {
     GlobalLogger->debug("Received insert batch request");
 
     // 解析JSON请求
@@ -313,7 +313,7 @@ void HttpServer::insertBatchHandler(const httplib::Request& req, httplib::Respon
     setJsonResponse(json_response, res);
 }
 
-void HttpServer::addFollowerHandler(const httplib::Request& req, httplib::Response& res) {
+void VdbHttpServer::addFollowerHandler(const httplib::Request& req, httplib::Response& res) {
     GlobalLogger->debug("Received addFollower request");
 
     // 解析JSON请求
@@ -359,7 +359,7 @@ void HttpServer::addFollowerHandler(const httplib::Request& req, httplib::Respon
     }
 }
 
-void HttpServer::listNodeHandler(const httplib::Request& req, httplib::Response& res) {
+void VdbHttpServer::listNodeHandler(const httplib::Request& req, httplib::Response& res) {
     GlobalLogger->debug("Received listNode request");
 
     // 获取所有节点信息
@@ -387,7 +387,7 @@ void HttpServer::listNodeHandler(const httplib::Request& req, httplib::Response&
     setJsonResponse(json_response, res);
 }
 
-void HttpServer::snapshotHandler(const httplib::Request& req, httplib::Response& res) {
+void VdbHttpServer::snapshotHandler(const httplib::Request& req, httplib::Response& res) {
     GlobalLogger->debug("Received snapshot request");
 
     vector_engine_->takeSnapshot();

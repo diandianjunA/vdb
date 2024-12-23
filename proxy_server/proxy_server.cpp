@@ -1,4 +1,4 @@
-#include "include/proxy_server.h"
+#include "include/proxy_http_server.h"
 #include "include/logger.h"
 #include "rapidjson/document.h"
 #include "rapidjson/writer.h"
@@ -6,7 +6,7 @@
 #include <iostream>
 #include <sstream>
 
-ProxyServer::ProxyServer(const std::string& masterServerHost, int masterServerPort, const std::string& instanceId)
+ProxyHttpServer::ProxyHttpServer(const std::string& masterServerHost, int masterServerPort, const std::string& instanceId)
 : masterServerHost_(masterServerHost), masterServerPort_(masterServerPort), instanceId_(instanceId), curlHandle_(nullptr), activeNodesIndex_(0) , nextNodeIndex_(0), running_(true) {
     initCurl();
     setupForwarding();
@@ -16,12 +16,12 @@ ProxyServer::ProxyServer(const std::string& masterServerHost, int masterServerPo
 }
 
 
-ProxyServer::~ProxyServer() {
+ProxyHttpServer::~ProxyHttpServer() {
     running_ = false; // 停止定时器循环
     cleanupCurl();
 }
 
-void ProxyServer::initCurl() {
+void ProxyHttpServer::initCurl() {
     curl_global_init(CURL_GLOBAL_DEFAULT);
     curlHandle_ = curl_easy_init();
     if (curlHandle_) {
@@ -31,19 +31,19 @@ void ProxyServer::initCurl() {
     }
 }
 
-void ProxyServer::cleanupCurl() {
+void ProxyHttpServer::cleanupCurl() {
     if (curlHandle_) {
         curl_easy_cleanup(curlHandle_);
     }
     curl_global_cleanup();
 }
 
-void ProxyServer::start(int port) {
+void ProxyHttpServer::start(int port) {
     fetchAndUpdateNodes(); // 获取节点信息
     httpServer_.listen("0.0.0.0", port);
 }
 
-void ProxyServer::setupForwarding() {
+void ProxyHttpServer::setupForwarding() {
     // 对 /search 路径的POST请求进行转发
     httpServer_.Post("/search", [this](const httplib::Request& req, httplib::Response& res) {
         GlobalLogger->info("Forwarding POST /search");
@@ -101,7 +101,7 @@ void ProxyServer::setupForwarding() {
     
 }
 
-void ProxyServer::forwardRequest(const httplib::Request& req, httplib::Response& res, const std::string& path) {
+void ProxyHttpServer::forwardRequest(const httplib::Request& req, httplib::Response& res, const std::string& path) {
     int activeIndex = activeNodesIndex_.load(); // 读取当前活动的数组索引
     if (nodes_[activeIndex].empty()) {
         GlobalLogger->error("No available nodes for forwarding");
@@ -162,12 +162,12 @@ void ProxyServer::forwardRequest(const httplib::Request& req, httplib::Response&
     }
 }
 
-size_t ProxyServer::writeCallback(void *contents, size_t size, size_t nmemb, void *userp) {
+size_t ProxyHttpServer::writeCallback(void *contents, size_t size, size_t nmemb, void *userp) {
     ((std::string*)userp)->append((char*)contents, size * nmemb);
     return size * nmemb;
 }
 
-void ProxyServer::fetchAndUpdateNodes() {
+void ProxyHttpServer::fetchAndUpdateNodes() {
     GlobalLogger->info("Fetching nodes from Master Server");
 
     // 构建请求 URL
@@ -218,7 +218,7 @@ void ProxyServer::fetchAndUpdateNodes() {
 }
 
 
-void ProxyServer::handleTopologyRequest(httplib::Response& res) {
+void ProxyHttpServer::handleTopologyRequest(httplib::Response& res) {
     rapidjson::Document doc;
     doc.SetObject();
     rapidjson::Document::AllocatorType& allocator = doc.GetAllocator();
@@ -252,7 +252,7 @@ void ProxyServer::handleTopologyRequest(httplib::Response& res) {
 }
 
 
-void ProxyServer::startNodeUpdateTimer() {
+void ProxyHttpServer::startNodeUpdateTimer() {
     std::thread([this]() {
         while (running_) {
             std::this_thread::sleep_for(std::chrono::seconds(30));

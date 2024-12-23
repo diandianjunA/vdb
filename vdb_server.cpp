@@ -1,6 +1,6 @@
 #include "include/logger.h"
 #include "include/index_factory.h"
-#include "include/http_server.h"
+#include "include/vdb_http_server.h"
 #include "include/vector_index.h"
 #include "include/vector_storage.h"
 #include "include/vector_engine.h"
@@ -9,7 +9,25 @@
 
 namespace fs = std::filesystem;
 
-std::map<std::string, std::string> readConfigFile(const std::string& filename);
+std::map<std::string, std::string> readConfigFile(const std::string& filename) {
+    std::ifstream file(filename);
+    std::map<std::string, std::string> config;
+    if (file.is_open()) {
+        std::string line;
+        while (std::getline(file, line)) {
+            std::stringstream ss(line);
+            std::string key, value;
+            std::getline(ss, key, '=');
+            std::getline(ss, value);
+            config[key] = value;
+        }
+        file.close();
+    } else {
+        GlobalLogger->error("Failed to open config file: {}", filename);
+        throw std::runtime_error("Failed to open config file: " + filename);
+    }
+    return config;
+}
 
 void reset_directory(const fs::path& dir_path) {
     try {
@@ -60,56 +78,54 @@ int main(int argc, char* argv[]) {
     // create_directory(base_path);
     reset_directory(base_path);
 
+    ServerType server_type;
+
+    std::string server_type_str = config["server_type"];
+    if (server_type_str == "vdb") {
+        server_type = ServerType::VDB;
+    } else if (server_type_str == "index") {
+        server_type = ServerType::INDEX;
+    } else if (server_type_str == "storage") {
+        server_type = ServerType::STORAGE;
+    } else {
+        throw std::runtime_error("server_type is illegal");
+        exit(1);
+    }
+
     // 初始化全局IndexFactory
     int dim = std::stoi(config["dim"]); // 向量维度
     int max_elements = std::stoi(config["max_elements"]); // 数据量
-    IndexFactory* globalIndexFactory = getGlobalIndexFactory();
-    globalIndexFactory->init(IndexFactory::IndexType::FLAT, dim);
-    globalIndexFactory->init(IndexFactory::IndexType::HNSW, dim, max_elements);
-    globalIndexFactory->init(IndexFactory::IndexType::HNSWFLAT, dim);
-
-
     std::string db_path = base_path + "/db";
     std::string wal_path = base_path + "/wal";
     int node_id = std::stoi(config["node_id"]);
     std::string endpoint = config["endpoint"];
     int port = std::stoi(config["port"]);
 
-    VectorIndex vector_index;
-    VectorStorage vector_storage(db_path);
-    WalManager wal_manager;
+    VectorIndex* vector_index;
+    VectorStorage* vector_storage;
+    WalManager* wal_manager = new WalManager();
 
-    VectorEngine vector_engine(db_path, wal_path, &vector_index, &vector_storage, &wal_manager);
+    if (server_type == ServerType::VDB || server_type == ServerType::INDEX) {
+        IndexFactory* globalIndexFactory = getGlobalIndexFactory();
+        globalIndexFactory->init(IndexFactory::IndexType::FLAT, dim);
+        globalIndexFactory->init(IndexFactory::IndexType::HNSW, dim, max_elements);
+        globalIndexFactory->init(IndexFactory::IndexType::HNSWFLAT, dim);
+        vector_index = new VectorIndex();
+    } else if (server_type == ServerType::VDB || server_type == ServerType::STORAGE) {
+        vector_storage = new VectorStorage(db_path);
+    }
+
+    VectorEngine vector_engine(db_path, wal_path, vector_index, vector_storage, wal_manager, server_type);
     vector_engine.reloadDatabase();
-
     RaftStuff raft_stuff(node_id, endpoint, port, &vector_engine);
 
     // 创建并启动HTTP服务器
     std::string http_server_address = config["http_server_address"];
     int http_server_port = std::stoi(config["http_server_port"]);
-    HttpServer server(http_server_address, http_server_port, &vector_engine, &raft_stuff);
+    VdbHttpServer server(http_server_address, http_server_port, &vector_engine, &raft_stuff);
     GlobalLogger->info("HttpServer created");
     server.start();
 
+    delete vector_storage;
     return 0;
-}
-
-std::map<std::string, std::string> readConfigFile(const std::string& filename) {
-    std::ifstream file(filename);
-    std::map<std::string, std::string> config;
-    if (file.is_open()) {
-        std::string line;
-        while (std::getline(file, line)) {
-            std::stringstream ss(line);
-            std::string key, value;
-            std::getline(ss, key, '=');
-            std::getline(ss, value);
-            config[key] = value;
-        }
-        file.close();
-    } else {
-        GlobalLogger->error("Failed to open config file: {}", filename);
-        throw std::runtime_error("Failed to open config file: " + filename);
-    }
-    return config;
 }

@@ -8,7 +8,7 @@
 #include "constant.h"
 #include "raft_stuff.h"
 
-class HttpServer {
+class VdbHttpServer {
 public:
     enum class CheckType {
         SEARCH,
@@ -21,7 +21,7 @@ public:
         ADMIN_LIST_NODE
     };
 
-    HttpServer(const std::string& host, int port, VectorEngine* vector_engine, RaftStuff* raft_stuff);
+    VdbHttpServer(const std::string& host, int port, VectorEngine* vector_engine, RaftStuff* raft_stuff);
     void start();
 
 private:

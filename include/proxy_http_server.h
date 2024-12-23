@@ -12,10 +12,10 @@ struct NodeInfo {
     int role; // 例如，0 表示主节点，1 表示从节点
 };
 
-class ProxyServer {
+class ProxyHttpServer {
 public:
-    ProxyServer(const std::string& masterServerHost, int masterServerPort, const std::string& instanceId);
-    ~ProxyServer();
+    ProxyHttpServer(const std::string& masterServerHost, int masterServerPort, const std::string& instanceId);
+    ~ProxyHttpServer();
     void start(int port);
 
 private:

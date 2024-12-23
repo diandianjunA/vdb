@@ -1,4 +1,4 @@
-#include "include/master_server.h"
+#include "include/master_http_server.h"
 #include "include/logger.h"
 #include <sstream>
 #include <iostream>
@@ -33,7 +33,7 @@ rapidjson::Document ServerInfo::toJson() const {
 }
 
 
-MasterServer::MasterServer(const std::string& etcdEndpoints, int httpPort)
+MasterHttpServer::MasterHttpServer(const std::string& etcdEndpoints, int httpPort)
 : etcdClient_(etcdEndpoints), httpPort_(httpPort) {
     httpServer_.Get("/getNodeInfo", [this](const httplib::Request& req, httplib::Response& res) {
         getNodeInfo(req, res);
@@ -49,11 +49,11 @@ MasterServer::MasterServer(const std::string& etcdEndpoints, int httpPort)
     });
 }
 
-void MasterServer::run() {
+void MasterHttpServer::run() {
     httpServer_.listen("0.0.0.0", httpPort_);
 }
 
-void MasterServer::setResponse(httplib::Response& res, int retCode, const std::string& msg, const rapidjson::Document* data) {
+void MasterHttpServer::setResponse(httplib::Response& res, int retCode, const std::string& msg, const rapidjson::Document* data) {
     rapidjson::Document doc;
     doc.SetObject();
     rapidjson::Document::AllocatorType& allocator = doc.GetAllocator();
@@ -75,7 +75,7 @@ void MasterServer::setResponse(httplib::Response& res, int retCode, const std::s
 }
 
 
-void MasterServer::getNodeInfo(const httplib::Request& req, httplib::Response& res) {
+void MasterHttpServer::getNodeInfo(const httplib::Request& req, httplib::Response& res) {
     auto instanceId = req.get_param_value("instanceId");
     auto nodeId = req.get_param_value("nodeId");
     try {
@@ -111,7 +111,7 @@ void MasterServer::getNodeInfo(const httplib::Request& req, httplib::Response& r
 }
 
 
-void MasterServer::addNode(const httplib::Request& req, httplib::Response& res) {
+void MasterHttpServer::addNode(const httplib::Request& req, httplib::Response& res) {
     rapidjson::Document doc;
     doc.Parse(req.body.c_str());
     if (!doc.IsObject()) {
@@ -137,7 +137,7 @@ void MasterServer::addNode(const httplib::Request& req, httplib::Response& res) 
 
 
 
-void MasterServer::removeNode(const httplib::Request& req, httplib::Response& res) {
+void MasterHttpServer::removeNode(const httplib::Request& req, httplib::Response& res) {
     auto instanceId = req.get_param_value("instanceId");
     auto nodeId = req.get_param_value("nodeId");
     std::string etcdKey = "/instances/" + instanceId + "/nodes/" + nodeId;
@@ -154,7 +154,7 @@ void MasterServer::removeNode(const httplib::Request& req, httplib::Response& re
     }
 }
 
-void MasterServer::getInstance(const httplib::Request& req, httplib::Response& res) {
+void MasterHttpServer::getInstance(const httplib::Request& req, httplib::Response& res) {
     auto instanceId = req.get_param_value("instanceId");
     GlobalLogger->info("Getting instance information for instanceId: {}", instanceId);
 
