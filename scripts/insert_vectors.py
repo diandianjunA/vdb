@@ -24,8 +24,8 @@ def post_vector_to_server(vectors, url="http://localhost:8080/insert", index_typ
     """
     for i, vector in enumerate(vectors):
         payload = {
+            "operation": "insert",
             "object": {
-                "operation": "insert",
                 "vector": vector.tolist(),
                 "id": i + 1,  # 自定义ID，从1开始
             },

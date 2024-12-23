@@ -22,9 +22,6 @@ HttpServer::HttpServer(const std::string& host, int port, VectorEngine* vector_e
     server.Post("/admin/snapshot", [this](const httplib::Request& req, httplib::Response& res) {
         snapshotHandler(req, res);
     });
-    server.Post("/admin/setLeader", [this](const httplib::Request& req, httplib::Response& res) {
-        setLeaderHandler(req, res);
-    });
     server.Get("/admin/listNode", [this](const httplib::Request& req, httplib::Response& res) {
         listNodeHandler(req, res);
     });
@@ -394,21 +391,6 @@ void HttpServer::snapshotHandler(const httplib::Request& req, httplib::Response&
     GlobalLogger->debug("Received snapshot request");
 
     vector_engine_->takeSnapshot();
-
-    rapidjson::Document json_response;
-    json_response.SetObject();
-    rapidjson::Document::AllocatorType& allocator = json_response.GetAllocator();
-
-    // 设置响应
-    json_response.AddMember(RESPONSE_RETCODE, RESPONSE_RETCODE_SUCCESS, allocator);
-    setJsonResponse(json_response, res);
-}
-
-void HttpServer::setLeaderHandler(const httplib::Request& req, httplib::Response& res) {
-    GlobalLogger->debug("Received setLeader request");
-
-    // 将当前节点设置为主节点
-    raft_stuff_->enableElectionTimeout(10000, 20000);
 
     rapidjson::Document json_response;
     json_response.SetObject();

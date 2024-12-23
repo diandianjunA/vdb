@@ -4,13 +4,40 @@
 #include "include/vector_index.h"
 #include "include/vector_storage.h"
 #include "include/vector_engine.h"
-#include <unistd.h>
+#include <filesystem>
+#include <stdexcept>
+
+namespace fs = std::filesystem;
 
 std::map<std::string, std::string> readConfigFile(const std::string& filename);
 
-bool directoryExists(const std::string& path);
+void reset_directory(const fs::path& dir_path) {
+    try {
+        // 如果目标文件夹已存在
+        if (fs::exists(dir_path)) {
+            if (!fs::is_directory(dir_path)) {
+                throw std::runtime_error(dir_path.string() + " 不是一个文件夹");
+            }
+            // 清空文件夹内容
+            fs::remove_all(dir_path);
+        }
+        // 重新创建空文件夹
+        fs::create_directories(dir_path);
+    } catch (const std::exception& e) {
+        std::cerr << "操作失败: " << e.what() << std::endl;
+    }
+}
 
-bool createDirectory(const std::string& path);
+void create_directory(const fs::path& dir_path) {
+    try {
+        // 如果目标文件夹已存在
+        if (!fs::exists(dir_path)) {
+            fs::create_directories(dir_path);
+        }
+    } catch (const std::exception& e) {
+        std::cerr << "操作失败: " << e.what() << std::endl;
+    }
+}
 
 int main(int argc, char* argv[]) {
     if (argc != 2) {
@@ -30,9 +57,8 @@ int main(int argc, char* argv[]) {
     GlobalLogger->info("Global logger initialized");
 
     std::string base_path = config["base_path"];
-    if (!createDirectory(base_path)) {
-        throw std::runtime_error("Failed to create directory: " + base_path);
-    }
+    // create_directory(base_path);
+    reset_directory(base_path);
 
     // 初始化全局IndexFactory
     int dim = std::stoi(config["dim"]); // 向量维度
@@ -86,27 +112,4 @@ std::map<std::string, std::string> readConfigFile(const std::string& filename) {
         throw std::runtime_error("Failed to open config file: " + filename);
     }
     return config;
-}
-
-bool directoryExists(const std::string& path) {
-    struct stat info;
-    return stat(path.c_str(), &info) == 0 && (info.st_mode & S_IFDIR);
-}
-
-bool createDirectory(const std::string& path) {
-    if (directoryExists(path)) {
-        return true;
-    }
-
-    // Recursively create parent directories
-    size_t pos = path.find_last_of("/\\"); // Handle both Windows (\\) and Unix (/) separators
-    if (pos != std::string::npos) {
-        std::string parent = path.substr(0, pos);
-        if (!createDirectory(parent)) {
-            return false;
-        }
-    }
-
-    // Create the current directory
-    return mkdir(path.c_str(), 0755) == 0 || directoryExists(path);
 }

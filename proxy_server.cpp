@@ -12,6 +12,8 @@ int main() {
 
     GlobalLogger->info("Starting ProxyServer...");
     ProxyServer proxy(master_host, master_port, instance_id);
+    GlobalLogger->info("Starting Proxy Server on port {}", proxy_port);
+    GlobalLogger->info("Proxy server created");
     proxy.start(proxy_port);
 
     return 0;

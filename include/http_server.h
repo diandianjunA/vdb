@@ -30,7 +30,6 @@ private:
     void queryHandler(const httplib::Request& req, httplib::Response& res);
     void insertBatchHandler(const httplib::Request& req, httplib::Response& res);
     void snapshotHandler(const httplib::Request& req, httplib::Response& res);
-    void setLeaderHandler(const httplib::Request& req, httplib::Response& res);
     void addFollowerHandler(const httplib::Request& req, httplib::Response& res);
     void listNodeHandler(const httplib::Request& req, httplib::Response& res);
     void setJsonResponse(const rapidjson::Document& json_response, httplib::Response& res);

@@ -1,6 +1,6 @@
 #include "include/raft_stuff.h"
 
-RaftStuff::RaftStuff(int node_id, const std::string& endpoint, int port, VectorEngine* vector_engine) : node_id(node_id), endpoint(endpoint), port_(port), vector_engine_(vector_engine) {
+RaftStuff::RaftStuff(int node_id, const std::string& endpoint, int port, VectorEngine* vector_engine) : node_id(node_id), endpoint(endpoint), port_(port), raft_logger_(nullptr), vector_engine_(vector_engine) {
     Init();
 }
 
@@ -9,27 +9,41 @@ void RaftStuff::Init() {
     sm_ = cs_new<log_state_machine>(vector_engine_);
 
     asio_service::options asio_opt;
-    asio_opt.thread_pool_size_ = 1;
+    asio_opt.thread_pool_size_ = 4;
 
     raft_params params;
+    params.heart_beat_interval_ = 100;
+    params.election_timeout_lower_bound_ = 200;
+    params.election_timeout_upper_bound_ = 400;
+    // Upto 5 logs will be preserved ahead the last snapshot.
+    params.reserved_log_items_ = 5;
+    // Snapshot will be created for every 5 log appends.
+    params.snapshot_distance_ = 5;
+    // Client timeout: 3000 ms.
+    params.client_req_timeout_ = 3000;
+    // According to this method, `append_log` function
+    // should be handled differently.
+    params.return_method_ = raft_params::blocking;
 
-    raft_instance_ = launcher_.init(sm_, smgr_, nullptr, port_, asio_opt, params);
-    GlobalLogger->debug("RaftStuff initialized with node_id: {}, endpoint: {}, port: {}", node_id, endpoint, port_); // 添加打印日志
+    raft_instance_ = launcher_.init(sm_, smgr_, raft_logger_, port_, asio_opt, params);
+    
+    // Wait until Raft server is ready (upto 5 seconds).
+    const size_t MAX_TRY = 20;
+    for (size_t ii=0; ii<MAX_TRY; ++ii) {
+        if (raft_instance_->is_initialized()) {
+            GlobalLogger->debug("RaftStuff initialized with node_id: {}, endpoint: {}, port: {}", node_id, endpoint, port_);
+            return;
+        }
+        fflush(stdout);
+        std::this_thread::sleep_for(std::chrono::milliseconds(250));
+    }
+    GlobalLogger->error("RaftStuff initialized failed");
 }
 
 ptr<cmd_result<ptr<buffer>>> RaftStuff::addSrv(int srv_id, const std::string& srv_endpoint) {
-    ptr<srv_config> peer_srv_conf = cs_new<srv_config>(srv_id, srv_endpoint);
-    GlobalLogger->debug("Adding server with srv_id: {}, srv_endpoint: {}", srv_id, srv_endpoint); // 添加打印日志
-    return raft_instance_->add_srv(*peer_srv_conf);
-}
-
-void RaftStuff::enableElectionTimeout(int lower_bound, int upper_bound) {
-    if (raft_instance_) {
-        raft_params params = raft_instance_->get_current_params();
-        params.election_timeout_lower_bound_ = lower_bound;
-        params.election_timeout_upper_bound_ = upper_bound;
-        raft_instance_->update_params(params);
-    }
+    srv_config srv_conf_to_add(srv_id, srv_endpoint);
+    GlobalLogger->debug("Adding server with srv_id: {}, srv_endpoint: {}", srv_id, srv_endpoint);
+    return raft_instance_->add_srv(srv_conf_to_add);
 }
 
 bool RaftStuff::isLeader() const {

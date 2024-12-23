@@ -22,6 +22,7 @@ private:
     std::string endpoint;
     ptr<state_mgr> smgr_;
     ptr<state_machine> sm_;
+    ptr<logger> raft_logger_;
     int port_;
     raft_launcher launcher_;
     ptr<raft_server> raft_instance_;

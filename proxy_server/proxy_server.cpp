@@ -39,10 +39,8 @@ void ProxyServer::cleanupCurl() {
 }
 
 void ProxyServer::start(int port) {
-    GlobalLogger->info("Proxy server starting on port {}", port);
     fetchAndUpdateNodes(); // 获取节点信息
     httpServer_.listen("0.0.0.0", port);
-    GlobalLogger->info("after listen");
 }
 
 void ProxyServer::setupForwarding() {
@@ -115,8 +113,7 @@ void ProxyServer::forwardRequest(const httplib::Request& req, httplib::Response&
     size_t nodeIndex = 0;
 
     // 检查是否需要强制路由到主节点
-    bool forceMaster = (req.has_param("forceMaster") && req.get_param_value("forceMaster") == "true");
-    if (forceMaster || writePaths_.find(path) != writePaths_.end()) {
+    if (writePaths_.find(path) != writePaths_.end()) {
         // 强制主节点或写请求 - 寻找 role 为 0 的节点
         for (size_t i = 0; i < nodes_[activeIndex].size(); ++i) {
             if (nodes_[activeIndex][i].role == 0) {

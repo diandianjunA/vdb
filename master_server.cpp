@@ -12,7 +12,8 @@ int main() {
 
     try {
         MasterServer masterServer(etcdEndpoints, httpPort);
-        GlobalLogger->info("Starting MasterServer on port {}", httpPort);
+        GlobalLogger->info("Starting Master Server on port {}", httpPort);
+        GlobalLogger->info("Master Server created");
         masterServer.run();
     } catch (const std::exception& e) {
         GlobalLogger->error("Exception occurred in MasterServer: {}", e.what());
