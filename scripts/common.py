@@ -1,7 +1,7 @@
 import requests
 import os
 
-def list_node(url="http://localhost:8080/admin/listNode"):
+def list_node(url="http://localhost:8080/listNode"):
     """
     返回集群的节点情况
 
@@ -17,7 +17,7 @@ def list_node(url="http://localhost:8080/admin/listNode"):
     except requests.RequestException as e:
         print(f"Error listnode: {e}")
 
-def set_leader(url="http://localhost:8080/admin/setLeader"):
+def set_leader(url="http://localhost:8080/setLeader"):
     """
     设置leader
 
@@ -33,7 +33,7 @@ def set_leader(url="http://localhost:8080/admin/setLeader"):
     except requests.RequestException as e:
         print(f"Error set leader: {e}")
 
-def add_follower(nodeId, endpoint, url="http://localhost:8080/admin/addFollower"):
+def add_follower(nodeId, endpoint, url="http://localhost:8082/addFollower"):
     """
     返回集群的节点情况
 
@@ -42,6 +42,7 @@ def add_follower(nodeId, endpoint, url="http://localhost:8080/admin/addFollower"
     :param url: 查询节点的URL
     """
     payload = {
+        "operation": "add_follower",
         "nodeId": nodeId,
         "endpoint": endpoint
     }
@@ -55,7 +56,7 @@ def add_follower(nodeId, endpoint, url="http://localhost:8080/admin/addFollower"
     except requests.RequestException as e:
         print(f"Error add follower: {e}")
 
-def insert(vector, id, url="http://localhost:8080/insert", index_type="FLAT"):
+def insert(vector, id, url="http://localhost:8082/insert", index_type="FLAT"):
     """
     将向量数据发送到服务器
 
@@ -83,6 +84,6 @@ def insert(vector, id, url="http://localhost:8080/insert", index_type="FLAT"):
 if __name__ == "__main__":
     # list_node()
     # set_leader()
-    # add_follower(2, '127.0.0.1:9091')
-    vector = [22]
-    insert(vector, 5)
+    # add_follower(4, '127.0.0.1:9093')
+    vector = [9]
+    insert(vector, 10)

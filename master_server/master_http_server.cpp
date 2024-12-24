@@ -49,6 +49,12 @@ MasterHttpServer::MasterHttpServer(const std::string& etcdEndpoints, int httpPor
     });
 }
 
+MasterHttpServer::~MasterHttpServer() {
+    for (auto& key: key_set) {
+        etcdClient_.rm(key);
+    }
+}
+
 void MasterHttpServer::run() {
     httpServer_.listen("0.0.0.0", httpPort_);
 }
@@ -129,13 +135,12 @@ void MasterHttpServer::addNode(const httplib::Request& req, httplib::Response& r
         doc.Accept(writer);
 
         etcdClient_.set(etcdKey, buffer.GetString()).get();
+        key_set.emplace(etcdKey);
         setResponse(res, 0, "Node added successfully");
     } catch (const std::exception& e) {
         setResponse(res, 1, std::string("Error accessing etcd: ") + e.what());
     }
 }
-
-
 
 void MasterHttpServer::removeNode(const httplib::Request& req, httplib::Response& res) {
     auto instanceId = req.get_param_value("instanceId");

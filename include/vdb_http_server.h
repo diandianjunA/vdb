@@ -15,10 +15,10 @@ public:
         INSERT,
         QUERY,
         INSERT_BATCH,
-        ADMIN_ADD_FOLLOWER,
-        ADMIN_SNAPSHOT,
-        ADMIN_SET_LEADER,
-        ADMIN_LIST_NODE
+        ADD_FOLLOWER,
+        SNAPSHOT,
+        SET_LEADER,
+        LIST_NODE
     };
 
     VdbHttpServer(const std::string& host, int port, VectorEngine* vector_engine, RaftStuff* raft_stuff);

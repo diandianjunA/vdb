@@ -9,7 +9,8 @@
 struct NodeInfo {
     std::string nodeId;
     std::string url;
-    int role; // 例如，0 表示主节点，1 表示从节点
+    int role; // 0 表示主节点，1 表示从节点
+    int type; // 0 表示综合节点，1 表示索引节点，2 表示存储节点
 };
 
 class ProxyHttpServer {
@@ -30,8 +31,10 @@ private:
     std::mutex nodesMutex_; // 保证节点信息的线程安全访问
     bool running_; // 控制定时器线程的运行
 
-    std::set<std::string> readPaths_;  // 读请求的路径集合
-    std::set<std::string> writePaths_; // 写请求的路径集合
+    std::set<std::string> follower_request;  // 主从节点都可处理的请求的路径集合
+    std::set<std::string> leader_request; // 只有主节点可以处理的请求的路径集合
+    std::set<std::string> index_cannot;  // 索引节点无法处理的请求的路径集合
+    std::set<std::string> storage_cannot; // 存储节点无法处理的请求的路径集合
 
     void setupForwarding();
     void forwardRequest(const httplib::Request& req, httplib::Response& res, const std::string& path);

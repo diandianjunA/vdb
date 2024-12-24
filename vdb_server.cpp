@@ -111,7 +111,8 @@ int main(int argc, char* argv[]) {
         globalIndexFactory->init(IndexFactory::IndexType::HNSW, dim, max_elements);
         globalIndexFactory->init(IndexFactory::IndexType::HNSWFLAT, dim);
         vector_index = new VectorIndex();
-    } else if (server_type == ServerType::VDB || server_type == ServerType::STORAGE) {
+    }
+    if (server_type == ServerType::VDB || server_type == ServerType::STORAGE) {
         vector_storage = new VectorStorage(db_path);
     }
 

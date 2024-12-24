@@ -97,24 +97,24 @@ def run_proxy_server():
         print("Executable not found. Please compile the project first.")
 
 def create_vdb_node(): 
-    vdb_server1 = run_vdb_server(project_root + "/config/conf1.ini")
-    vdb_server2 = run_vdb_server(project_root + "/config/conf2.ini")
+    vdb_server1 = run_vdb_server(project_root + "/config/conf3.ini")
+    vdb_server2 = run_vdb_server(project_root + "/config/conf4.ini")
     return vdb_server1, vdb_server2
 
 def create_cluster():
     vdb_server1, vdb_server2 = create_vdb_node()
     print("vdb_server node has started")
     # 集群添加节点
-    post({"operation": "add_follower","nodeId": 2, "endpoint": "127.0.0.1:9091"}, "http://localhost:8080/addFollower")
+    post({"operation": "add_follower","nodeId": 4, "endpoint": "127.0.0.1:9093"}, "http://localhost:8082/addFollower")
     print("raft has been created")
-    get({}, "http://localhost:8080/listNode")
+    get({}, "http://localhost:8082/listNode")
     master_server = run_master_server()
     print("master_server node has started")
     # 添加集群元数据
-    post({"instanceId": "instance1", "nodeId": "node1", "url": "http://127.0.0.1:8080", "role": 0, "type": 0}, "http://localhost:6060/addNode")
-    post({"instanceId": "instance1", "nodeId": "node2", "url": "http://127.0.0.1:9090", "role": 1, "type": 0}, "http://localhost:6060/addNode")
+    post({"instanceId": "instance2", "nodeId": "node3", "url": "http://127.0.0.1:8082", "role": 0, "type": 1}, "http://localhost:6060/addNode")
+    post({"instanceId": "instance2", "nodeId": "node4", "url": "http://127.0.0.1:9092", "role": 1, "type": 2}, "http://localhost:6060/addNode")
     # 查看所有节点信息
-    get({"instanceId": "instance1"}, "http://localhost:6060/getInstance")
+    get({"instanceId": "instance2"}, "http://localhost:6060/getInstance")
     # 启动代理服务器
     proxy_server = run_proxy_server()
     print("proxy_server node has started")
@@ -122,6 +122,7 @@ def create_cluster():
     # 查看拓扑结构
     get({}, "http://localhost:6061/topology")
     return vdb_server1, vdb_server2, master_server, proxy_server
+
 
 def post(payload, url):
     """
@@ -161,7 +162,6 @@ def main():
     try:
         compile_project()
         vdb_server1, vdb_server2, master_server, proxy_server = create_cluster()
-        # vdb_server1, vdb_server2, master_server = create_cluster()
         test1()
     finally:
         vdb_server1.kill()

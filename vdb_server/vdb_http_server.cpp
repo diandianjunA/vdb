@@ -16,13 +16,13 @@ VdbHttpServer::VdbHttpServer(const std::string& host, int port, VectorEngine* ve
     server.Post("/insertBatch", [this](const httplib::Request& req, httplib::Response& res) {
         insertBatchHandler(req, res);
     });
-    server.Post("/admin/addFollower", [this](const httplib::Request& req, httplib::Response& res) {
+    server.Post("/addFollower", [this](const httplib::Request& req, httplib::Response& res) {
         addFollowerHandler(req, res);
     });
-    server.Post("/admin/snapshot", [this](const httplib::Request& req, httplib::Response& res) {
+    server.Post("/snapshot", [this](const httplib::Request& req, httplib::Response& res) {
         snapshotHandler(req, res);
     });
-    server.Get("/admin/listNode", [this](const httplib::Request& req, httplib::Response& res) {
+    server.Get("/listNode", [this](const httplib::Request& req, httplib::Response& res) {
         listNodeHandler(req, res);
     });
 }
@@ -41,14 +41,8 @@ bool VdbHttpServer::isRequestValid(const rapidjson::Document& json_request, Chec
             return json_request.HasMember(REQUEST_OPERATION) && json_request.HasMember(REQUEST_ID);
         case CheckType::INSERT_BATCH:
             return json_request.HasMember(REQUEST_OPERATION) && json_request.HasMember(REQUEST_OBJECTS) && (!json_request.HasMember(REQUEST_INDEX_TYPE) || json_request[REQUEST_INDEX_TYPE].IsString());
-        case CheckType::ADMIN_ADD_FOLLOWER:
+        case CheckType::ADD_FOLLOWER:
             return json_request.HasMember(REQUEST_OPERATION) && json_request.HasMember(REQUEST_NODE_ID) && json_request.HasMember(REQUEST_ENDPOINT);
-        case CheckType::ADMIN_SET_LEADER:
-            return json_request.HasMember(REQUEST_OPERATION);
-        case CheckType::ADMIN_SNAPSHOT:
-            return json_request.HasMember(REQUEST_OPERATION);
-        case CheckType::ADMIN_LIST_NODE:
-            return json_request.HasMember(REQUEST_OPERATION);
         default:
             return false;
     }
@@ -90,9 +84,9 @@ void VdbHttpServer::searchHandler(const httplib::Request& req, httplib::Response
 
     // 检查请求的合法性
     if (!isRequestValid(json_request, CheckType::SEARCH)) {
-        GlobalLogger->error("Missing vectors or k parameter in the request");
+        GlobalLogger->error("Missing parameter in the request");
         res.status = 400;
-        setErrorJsonResponse(res, RESPONSE_RETCODE_ERROR, "Missing vectors or k parameter in the request");
+        setErrorJsonResponse(res, RESPONSE_RETCODE_ERROR, "Missing parameter in the request");
         return;
     }
 
@@ -166,9 +160,9 @@ void VdbHttpServer::insertHandler(const httplib::Request& req, httplib::Response
 
     // 检查请求的合法性
     if (!isRequestValid(json_request, CheckType::INSERT)) {
-        GlobalLogger->error("Missing vectors or id parameter in the request");
+        GlobalLogger->error("Missing parameter in the request");
         res.status = 400;
-        setErrorJsonResponse(res, RESPONSE_RETCODE_ERROR, "Missing vectors or k parameter in the request");
+        setErrorJsonResponse(res, RESPONSE_RETCODE_ERROR, "Missing parameter in the request");
         return;
     }
 
@@ -233,9 +227,9 @@ void VdbHttpServer::queryHandler(const httplib::Request& req, httplib::Response&
 
     // 检查请求的合法性
     if (!isRequestValid(json_request, CheckType::QUERY)) { // 添加对isRequestValid的调用
-        GlobalLogger->error("Missing vectors or id parameter in the request");
+        GlobalLogger->error("Missing parameter in the request");
         res.status = 400;
-        setErrorJsonResponse(res, RESPONSE_RETCODE_ERROR, "Missing vectors or k parameter in the request");
+        setErrorJsonResponse(res, RESPONSE_RETCODE_ERROR, "Missing parameter in the request");
         return;
     }
 
@@ -277,9 +271,9 @@ void VdbHttpServer::insertBatchHandler(const httplib::Request& req, httplib::Res
 
     // 检查请求的合法性
     if (!isRequestValid(json_request, CheckType::INSERT_BATCH)) { // 添加对isRequestValid的调用
-        GlobalLogger->error("Missing vectors or id parameter in the request");
+        GlobalLogger->error("Missing parameter in the request");
         res.status = 400;
-        setErrorJsonResponse(res, RESPONSE_RETCODE_ERROR, "Missing vectors or k parameter in the request");
+        setErrorJsonResponse(res, RESPONSE_RETCODE_ERROR, "Missing parameter in the request");
         return;
     }
 
@@ -325,6 +319,14 @@ void VdbHttpServer::addFollowerHandler(const httplib::Request& req, httplib::Res
         GlobalLogger->error("Invalid JSON request");
         res.status = 400;
         setErrorJsonResponse(res, RESPONSE_RETCODE_ERROR, "Invalid JSON request");
+        return;
+    }
+
+    // 检查请求的合法性
+    if (!isRequestValid(json_request, CheckType::ADD_FOLLOWER)) { // 添加对isRequestValid的调用
+        GlobalLogger->error("Missing parameter in the request");
+        res.status = 400;
+        setErrorJsonResponse(res, RESPONSE_RETCODE_ERROR, "Missing parameter in the request");
         return;
     }
 

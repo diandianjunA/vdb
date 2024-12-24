@@ -9,21 +9,21 @@ void RaftStuff::Init() {
     sm_ = cs_new<log_state_machine>(vector_engine_);
 
     asio_service::options asio_opt;
-    asio_opt.thread_pool_size_ = 4;
+    // asio_opt.thread_pool_size_ = 4;
 
     raft_params params;
     params.heart_beat_interval_ = 100;
     params.election_timeout_lower_bound_ = 200;
     params.election_timeout_upper_bound_ = 400;
-    // Upto 5 logs will be preserved ahead the last snapshot.
-    params.reserved_log_items_ = 5;
-    // Snapshot will be created for every 5 log appends.
-    params.snapshot_distance_ = 5;
-    // Client timeout: 3000 ms.
-    params.client_req_timeout_ = 3000;
-    // According to this method, `append_log` function
-    // should be handled differently.
-    params.return_method_ = raft_params::blocking;
+    // // Upto 5 logs will be preserved ahead the last snapshot.
+    // params.reserved_log_items_ = 5;
+    // // Snapshot will be created for every 5 log appends.
+    // params.snapshot_distance_ = 5;
+    // // Client timeout: 3000 ms.
+    // params.client_req_timeout_ = 3000;
+    // // According to this method, `append_log` function
+    // // should be handled differently.
+    // params.return_method_ = raft_params::blocking;
 
     raft_instance_ = launcher_.init(sm_, smgr_, raft_logger_, port_, asio_opt, params);
     
@@ -95,9 +95,9 @@ ptr<cmd_result<ptr<buffer>>> RaftStuff::appendEntries(const std::string& entry) 
     if (!raft_instance_ || !raft_instance_->is_leader()) {
         // 添加调试日志
         if (!raft_instance_) {
-            GlobalLogger->debug("Cannot append entries: Raft instance is not available");
+            throw std::runtime_error("Cannot append entries: Raft instance is not available");
         } else {
-            GlobalLogger->debug("Cannot append entries: Current node is not the leader");
+            throw std::runtime_error("Cannot append entries: Current node is not the leader");
         }
         return nullptr;
     }

@@ -11,8 +11,10 @@ ProxyHttpServer::ProxyHttpServer(const std::string& masterServerHost, int master
     initCurl();
     setupForwarding();
     startNodeUpdateTimer(); // 启动节点更新定时器
-    readPaths_ = {"/search", "/query"};
-    writePaths_ = {"/insert", "/insert_batch"};
+    follower_request = {"/search", "/query", "/listNode"};
+    leader_request = {"/insert", "/insert_batch", "/snapshot", "/addFollower"};
+    index_cannot = {"/query"};
+    storage_cannot = {"/search", "/snapshot"};
 }
 
 
@@ -40,65 +42,42 @@ void ProxyHttpServer::cleanupCurl() {
 
 void ProxyHttpServer::start(int port) {
     fetchAndUpdateNodes(); // 获取节点信息
+    GlobalLogger->info("Proxy server created");
     httpServer_.listen("0.0.0.0", port);
 }
 
 void ProxyHttpServer::setupForwarding() {
-    // 对 /search 路径的POST请求进行转发
     httpServer_.Post("/search", [this](const httplib::Request& req, httplib::Response& res) {
         GlobalLogger->info("Forwarding POST /search");
         forwardRequest(req, res, "/search");
     });
-
-    // 对 /insert 路径的POST请求进行转发
     httpServer_.Post("/insert", [this](const httplib::Request& req, httplib::Response& res) {
         GlobalLogger->info("Forwarding POST /insert");
         forwardRequest(req, res, "/insert");
     });
-
-    // 对 /upsert 路径的POST请求进行转发
     httpServer_.Post("/insert_batch", [this](const httplib::Request& req, httplib::Response& res) {
         GlobalLogger->info("Forwarding POST /insert_batch");
         forwardRequest(req, res, "/insert_batch");
     });
-
-    // 对 /query 路径的POST请求进行转发
     httpServer_.Post("/query", [this](const httplib::Request& req, httplib::Response& res) {
         GlobalLogger->info("Forwarding POST /query");
         forwardRequest(req, res, "/query");
     });
-
-    // 对 /admin/snapshot 路径的POST请求进行转发
-    httpServer_.Post("/admin/snapshot", [this](const httplib::Request& req, httplib::Response& res) {
-        GlobalLogger->info("Forwarding POST /admin/snapshot");
-        forwardRequest(req, res, "/admin/snapshot");
+    httpServer_.Post("/snapshot", [this](const httplib::Request& req, httplib::Response& res) {
+        GlobalLogger->info("Forwarding POST /snapshot");
+        forwardRequest(req, res, "/snapshot");
     });
-
-    // 对 /admin/setLeader 路径的POST请求进行转发
-    httpServer_.Post("/admin/setLeader", [this](const httplib::Request& req, httplib::Response& res) {
-        GlobalLogger->info("Forwarding POST /admin/setLeader");
-        forwardRequest(req, res, "/admin/setLeader");
+    httpServer_.Post("/addFollower", [this](const httplib::Request& req, httplib::Response& res) {
+        GlobalLogger->info("Forwarding POST /addFollower");
+        forwardRequest(req, res, "/addFollower");
     });
-
-    // 对 /admin/addFollower 路径的POST请求进行转发
-    httpServer_.Post("/admin/addFollower", [this](const httplib::Request& req, httplib::Response& res) {
-        GlobalLogger->info("Forwarding POST /admin/addFollower");
-        forwardRequest(req, res, "/admin/addFollower");
+    httpServer_.Get("/listNode", [this](const httplib::Request& req, httplib::Response& res) {
+        GlobalLogger->info("Forwarding GET /listNode");
+        forwardRequest(req, res, "/listNode");
     });
-
-    // 对 /admin/listNode 路径的GET请求进行转发
-    httpServer_.Get("/admin/listNode", [this](const httplib::Request& req, httplib::Response& res) {
-        GlobalLogger->info("Forwarding GET /admin/listNode");
-        forwardRequest(req, res, "/admin/listNode");
-    });
-
-    // 添加新路由以返回拓扑信息
     httpServer_.Get("/topology", [this](const httplib::Request&, httplib::Response& res) {
         this->handleTopologyRequest(res);
     });
-
-    // 在此处根据需要添加更多的转发规则
-    
 }
 
 void ProxyHttpServer::forwardRequest(const httplib::Request& req, httplib::Response& res, const std::string& path) {
@@ -113,17 +92,47 @@ void ProxyHttpServer::forwardRequest(const httplib::Request& req, httplib::Respo
     size_t nodeIndex = 0;
 
     // 检查是否需要强制路由到主节点
-    if (writePaths_.find(path) != writePaths_.end()) {
-        // 强制主节点或写请求 - 寻找 role 为 0 的节点
-        for (size_t i = 0; i < nodes_[activeIndex].size(); ++i) {
-            if (nodes_[activeIndex][i].role == 0) {
-                nodeIndex = i;
-                break;
+    if (leader_request.find(path) != leader_request.end()) {
+        if (index_cannot.find(path) != index_cannot.end()) {
+            for (size_t i = 0; i < nodes_[activeIndex].size(); ++i) {
+                if (nodes_[activeIndex][i].role == 0 && nodes_[activeIndex][i].type != 1) {
+                    nodeIndex = i;
+                    break;
+                }
+            }
+        } else if (storage_cannot.find(path) != storage_cannot.end()) {
+            for (size_t i = 0; i < nodes_[activeIndex].size(); ++i) {
+                if (nodes_[activeIndex][i].role == 0 && nodes_[activeIndex][i].type != 2) {
+                    nodeIndex = i;
+                    break;
+                }
+            }
+        } else {
+            for (size_t i = 0; i < nodes_[activeIndex].size(); ++i) {
+                if (nodes_[activeIndex][i].role == 0) {
+                    nodeIndex = i;
+                    break;
+                }
             }
         }
     } else {
-        // 读请求 - 轮询选择任何角色的节点
-        nodeIndex = nextNodeIndex_.fetch_add(1) % nodes_[activeIndex].size();
+        if (index_cannot.find(path) != index_cannot.end()) {
+            for (size_t i = 0; i < nodes_[activeIndex].size(); ++i) {
+                if (nodes_[activeIndex][i].type != 1) {
+                    nodeIndex = i;
+                    break;
+                }
+            }
+        } else if (storage_cannot.find(path) != storage_cannot.end()) {
+            for (size_t i = 0; i < nodes_[activeIndex].size(); ++i) {
+                if (nodes_[activeIndex][i].type != 2) {
+                    nodeIndex = i;
+                    break;
+                }
+            }
+        } else {
+            nodeIndex = nextNodeIndex_.fetch_add(1) % nodes_[activeIndex].size();
+        }
     }
 
     const auto& targetNode = nodes_[activeIndex][nodeIndex];
@@ -201,6 +210,8 @@ void ProxyHttpServer::fetchAndUpdateNodes() {
         return;
     }
 
+    // GlobalLogger->info(response_data);
+
     int inactiveIndex = activeNodesIndex_.load() ^ 1; // 获取非活动数组的索引
     nodes_[inactiveIndex].clear();
     const auto& nodesArray = doc["data"]["nodes"].GetArray();
@@ -209,6 +220,7 @@ void ProxyHttpServer::fetchAndUpdateNodes() {
         node.nodeId = nodeVal["nodeId"].GetString();
         node.url = nodeVal["url"].GetString();
         node.role = nodeVal["role"].GetInt();
+        node.type = nodeVal["type"].GetInt();
         nodes_[inactiveIndex].push_back(node);
     }
 
@@ -238,6 +250,7 @@ void ProxyHttpServer::handleTopologyRequest(httplib::Response& res) {
         nodeObj.AddMember("nodeId", rapidjson::Value(node.nodeId.c_str(), allocator), allocator);
         nodeObj.AddMember("url", rapidjson::Value(node.url.c_str(), allocator), allocator);
         nodeObj.AddMember("role", node.role, allocator);
+        nodeObj.AddMember("type", node.type, allocator);
         nodesArray.PushBack(nodeObj, allocator);
     }
     doc.AddMember("nodes", nodesArray, allocator);
