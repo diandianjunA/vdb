@@ -94,7 +94,6 @@ int main(int argc, char* argv[]) {
 
     // 初始化全局IndexFactory
     int dim = std::stoi(config["dim"]); // 向量维度
-    int max_elements = std::stoi(config["max_elements"]); // 数据量
     std::string db_path = base_path + "/db";
     std::string wal_path = base_path + "/wal";
     int node_id = std::stoi(config["node_id"]);
@@ -103,20 +102,25 @@ int main(int argc, char* argv[]) {
 
     VectorIndex* vector_index;
     VectorStorage* vector_storage;
-    WalManager* wal_manager = new WalManager();
 
     if (server_type == ServerType::VDB || server_type == ServerType::INDEX) {
         IndexFactory* globalIndexFactory = getGlobalIndexFactory();
-        globalIndexFactory->init(IndexFactory::IndexType::FLAT, dim);
-        globalIndexFactory->init(IndexFactory::IndexType::HNSW, dim, max_elements);
-        globalIndexFactory->init(IndexFactory::IndexType::HNSWFLAT, dim);
-        vector_index = new VectorIndex();
+        std::string index_type = config["index_type"];
+        if (index_type == "FLAT") {
+            IndexFactory::IndexType type = IndexFactory::IndexType::FLAT;
+            void* index = globalIndexFactory->init(IndexFactory::IndexType::FLAT, dim);
+            vector_index = new VectorIndex(index, type);
+        } else if (index_type == "HNSWFLAT") {
+            IndexFactory::IndexType type = IndexFactory::IndexType::HNSWFLAT;
+            void* index = globalIndexFactory->init(IndexFactory::IndexType::HNSWFLAT, dim);
+            vector_index = new VectorIndex(index, type);
+        }
     }
     if (server_type == ServerType::VDB || server_type == ServerType::STORAGE) {
         vector_storage = new VectorStorage(db_path);
     }
 
-    VectorEngine vector_engine(db_path, wal_path, vector_index, vector_storage, wal_manager, server_type);
+    VectorEngine vector_engine(db_path, wal_path, vector_index, vector_storage, server_type);
     vector_engine.reloadDatabase();
     RaftStuff raft_stuff(node_id, endpoint, port, &vector_engine);
 

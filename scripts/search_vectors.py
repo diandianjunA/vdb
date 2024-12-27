@@ -12,7 +12,6 @@ def query_vectors(id, url="http://localhost:6061/query", index_type="HNSWFLAT"):
     payload = {
         "operation": "query",
         "id": id,
-        "index_type": index_type
     }
     try:
         response = requests.post(url, json=payload)
@@ -36,7 +35,6 @@ def search_vectors(vector, k, url="http://localhost:8080/search", index_type="FL
         "operation": "search",
         "vector": vector,
         "k": k,
-        "index_type": index_type
     }
     try:
         response = requests.post(url, json=payload)

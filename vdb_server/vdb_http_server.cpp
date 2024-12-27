@@ -34,13 +34,13 @@ void VdbHttpServer::start() {
 bool VdbHttpServer::isRequestValid(const rapidjson::Document& json_request, CheckType check_type) {
     switch(check_type) {
         case CheckType::SEARCH:
-            return json_request.HasMember(REQUEST_OPERATION) && json_request.HasMember(REQUEST_VECTOR) && json_request.HasMember(REQUEST_K) && (!json_request.HasMember(REQUEST_INDEX_TYPE) || json_request[REQUEST_INDEX_TYPE].IsString());
+            return json_request.HasMember(REQUEST_OPERATION) && json_request.HasMember(REQUEST_VECTOR) && json_request.HasMember(REQUEST_K);
         case CheckType::INSERT:
-            return json_request.HasMember(REQUEST_OPERATION) && json_request.HasMember(REQUEST_OBJECT) && (!json_request.HasMember(REQUEST_INDEX_TYPE) || json_request[REQUEST_INDEX_TYPE].IsString());
+            return json_request.HasMember(REQUEST_OPERATION) && json_request.HasMember(REQUEST_OBJECT);
         case CheckType::QUERY:
             return json_request.HasMember(REQUEST_OPERATION) && json_request.HasMember(REQUEST_ID);
         case CheckType::INSERT_BATCH:
-            return json_request.HasMember(REQUEST_OPERATION) && json_request.HasMember(REQUEST_OBJECTS) && (!json_request.HasMember(REQUEST_INDEX_TYPE) || json_request[REQUEST_INDEX_TYPE].IsString());
+            return json_request.HasMember(REQUEST_OPERATION) && json_request.HasMember(REQUEST_OBJECTS);
         case CheckType::ADD_FOLLOWER:
             return json_request.HasMember(REQUEST_OPERATION) && json_request.HasMember(REQUEST_NODE_ID) && json_request.HasMember(REQUEST_ENDPOINT);
         default:
@@ -99,17 +99,6 @@ void VdbHttpServer::searchHandler(const httplib::Request& req, httplib::Response
     
     GlobalLogger->debug("Query parameters: k = {}", k);
 
-    // 获取请求参数中的索引类型
-    IndexFactory::IndexType indexType = getIndexTypeFromRequest(json_request);
-
-    // 如果索引类型为UNKNOWN，返回400错误
-    if (indexType == IndexFactory::IndexType::UNKNOWN) {
-        GlobalLogger->error("Invalid indexType parameter in the request");
-        res.status = 400;
-        setErrorJsonResponse(res, RESPONSE_RETCODE_ERROR, "Invalid indexType parameter in the request");
-        return;
-    }
-
     // 使用 VectorIndex 的 search 接口执行查询
     std::pair<std::vector<long>, std::vector<float>> results = vector_engine_->search(json_request);
 
@@ -163,17 +152,6 @@ void VdbHttpServer::insertHandler(const httplib::Request& req, httplib::Response
         GlobalLogger->error("Missing parameter in the request");
         res.status = 400;
         setErrorJsonResponse(res, RESPONSE_RETCODE_ERROR, "Missing parameter in the request");
-        return;
-    }
-
-    // 获取请求参数中的索引类型
-    IndexFactory::IndexType indexType = getIndexTypeFromRequest(json_request);
-
-    // 如果索引类型为UNKNOWN，返回400错误
-    if (indexType == IndexFactory::IndexType::UNKNOWN) {
-        GlobalLogger->error("Invalid indexType parameter in the request");
-        res.status = 400;
-        setErrorJsonResponse(res, RESPONSE_RETCODE_ERROR, "Invalid indexType parameter in the request"); 
         return;
     }
 
@@ -401,19 +379,4 @@ void VdbHttpServer::snapshotHandler(const httplib::Request& req, httplib::Respon
     // 设置响应
     json_response.AddMember(RESPONSE_RETCODE, RESPONSE_RETCODE_SUCCESS, allocator);
     setJsonResponse(json_response, res);
-}
-
-IndexFactory::IndexType getIndexTypeFromRequest(const rapidjson::Document& json_request) {
-    // 获取请求参数中的索引类型
-    if (json_request.HasMember(REQUEST_INDEX_TYPE)) {
-        std::string index_type_str = json_request[REQUEST_INDEX_TYPE].GetString();
-        if (index_type_str == INDEX_TYPE_FLAT) {
-            return IndexFactory::IndexType::FLAT;
-        } else if (index_type_str == INDEX_TYPE_HNSW) {
-            return IndexFactory::IndexType::HNSW;
-        } else if (index_type_str == INDEX_TYPE_HNSWFLAT) {
-            return IndexFactory::IndexType::HNSWFLAT;
-        }
-    }
-    return IndexFactory::IndexType::UNKNOWN;
 }

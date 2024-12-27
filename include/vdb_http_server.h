@@ -42,5 +42,3 @@ private:
     VectorEngine* vector_engine_;
     RaftStuff* raft_stuff_;
 };
-
-IndexFactory::IndexType getIndexTypeFromRequest(const rapidjson::Document& json_request);

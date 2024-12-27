@@ -153,9 +153,9 @@ def get(params, url):
         print(f"Error post: {e}")
  
 def test1():
-    post({"operation": "insert", "object": {"id": 6, "vector": [0.9], "int_field": 49}, "index_type": "HNSWFLAT"}, "http://localhost:6061/insert")
-    post({"operation": "search", "vector": [0.9], "k": 5, "index_type": "HNSWFLAT"}, "http://localhost:6061/search")
-    post({"operation": "query", "id": 6, "index_type": "HNSWFLAT"}, "http://localhost:6061/query")
+    post({"operation": "insert", "object": {"id": 6, "vector": [0.9], "int_field": 49}}, "http://localhost:6061/insert")
+    post({"operation": "search", "vector": [0.9], "k": 5}, "http://localhost:6061/search")
+    post({"operation": "query", "id": 6,}, "http://localhost:6061/query")
 
 # 主函数
 def main():

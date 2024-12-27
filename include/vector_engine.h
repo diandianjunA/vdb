@@ -2,7 +2,6 @@
 
 #include "vector_index.h"
 #include "vector_storage.h"
-#include "wal_manager.h"
 
 enum class ServerType {
     VDB,
@@ -12,7 +11,7 @@ enum class ServerType {
 
 class VectorEngine {
 public:
-    VectorEngine(std::string db_path, std::string wal_path, VectorIndex* vector_index, VectorStorage* vector_storage, WalManager* wal_manager, ServerType server_type);
+    VectorEngine(std::string db_path, std::string wal_path, VectorIndex* vector_index, VectorStorage* vector_storage, ServerType server_type);
     ~VectorEngine();
 
     std::pair<std::vector<long>, std::vector<float>> search(const rapidjson::Document& json_request);
@@ -32,7 +31,6 @@ private:
     std::string db_path;
     VectorIndex* vector_index_;
     VectorStorage* vector_storage_;
-    WalManager* wal_manager;
     ServerType server_type;
 };
 

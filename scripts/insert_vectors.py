@@ -14,7 +14,7 @@ def read_vectors_from_file(file_name, vector_dim=100):
         data = f.read()
     return np.frombuffer(data, dtype=np.float32).reshape(-1, vector_dim)
 
-def post_vector_to_server(vectors, url="http://localhost:8080/insert", index_type="HNSWFLAT"):
+def post_vector_to_server(vectors, url="http://localhost:8080/insert"):
     """
     将向量数据发送到服务器
 
@@ -29,7 +29,6 @@ def post_vector_to_server(vectors, url="http://localhost:8080/insert", index_typ
                 "vector": vector.tolist(),
                 "id": i + 1,  # 自定义ID，从1开始
             },
-            "index_type": index_type
         }
         try:
             response = requests.post(url, json=payload)
@@ -40,7 +39,7 @@ def post_vector_to_server(vectors, url="http://localhost:8080/insert", index_typ
         except requests.RequestException as e:
             print(f"Error inserting vector ID {i + 1}: {e}")
 
-def post_vectors_batch_to_server(vectors, batch_size=100, url="http://localhost:8080/insertBatch", index_type="HNSWFLAT"):
+def post_vectors_batch_to_server(vectors, batch_size=100, url="http://localhost:8080/insertBatch"):
     """
     将向量数据批量发送到服务器
 
@@ -61,7 +60,6 @@ def post_vectors_batch_to_server(vectors, batch_size=100, url="http://localhost:
         payload = {
             "operation": "insert_batch",
             "objects": objects,
-            "index_type": index_type
         }
         
         try:

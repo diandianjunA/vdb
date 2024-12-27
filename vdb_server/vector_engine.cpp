@@ -6,8 +6,10 @@
 #include "logger.h"
 #include "vdb_http_server.h"
 
-VectorEngine::VectorEngine(std::string db_path, std::string wal_path, VectorIndex* vector_index, VectorStorage* vector_storage, WalManager* wal_manager, ServerType server_type) :db_path(db_path), vector_index_(vector_index), vector_storage_(vector_storage), wal_manager(wal_manager), server_type(server_type) {
-    wal_manager->init(wal_path);
+VectorEngine::VectorEngine(std::string db_path, std::string wal_path, VectorIndex* vector_index, VectorStorage* vector_storage, ServerType server_type) :db_path(db_path), vector_index_(vector_index), vector_storage_(vector_storage), server_type(server_type) {
+    if (vector_index_ != nullptr) {
+        vector_index_->wal_init(wal_path);
+    }
 }
 
 VectorEngine::~VectorEngine() {
@@ -25,20 +27,7 @@ std::pair<std::vector<long>, std::vector<float>> VectorEngine::search(const rapi
     }
     int k = json_request[REQUEST_K].GetInt();
 
-    // 获取请求参数中的索引类型
-    IndexFactory::IndexType indexType = IndexFactory::IndexType::UNKNOWN;
-    if (json_request.HasMember(REQUEST_INDEX_TYPE) && json_request[REQUEST_INDEX_TYPE].IsString()) {
-        std::string index_type_str = json_request[REQUEST_INDEX_TYPE].GetString();
-        if (index_type_str == INDEX_TYPE_FLAT) {
-            indexType = IndexFactory::IndexType::FLAT;
-        } else if (index_type_str == INDEX_TYPE_HNSW) {
-            indexType = IndexFactory::IndexType::HNSW;
-        } else if (index_type_str == INDEX_TYPE_HNSWFLAT) {
-            indexType = IndexFactory::IndexType::HNSWFLAT;
-        }
-    }
-
-    return vector_index_->search(indexType, data, k);
+    return vector_index_->search(data, k);
 }
     
 void VectorEngine::insert(const rapidjson::Document& json_request) {
@@ -55,21 +44,8 @@ void VectorEngine::insert(const rapidjson::Document& json_request) {
     }
     int id = object[REQUEST_ID].GetInt();
 
-    // 获取请求参数中的索引类型
-    IndexFactory::IndexType indexType = IndexFactory::IndexType::UNKNOWN;
-    if (json_request.HasMember(REQUEST_INDEX_TYPE) && json_request[REQUEST_INDEX_TYPE].IsString()) {
-        std::string index_type_str = json_request[REQUEST_INDEX_TYPE].GetString();
-        if (index_type_str == INDEX_TYPE_FLAT) {
-            indexType = IndexFactory::IndexType::FLAT;
-        } else if (index_type_str == INDEX_TYPE_HNSW) {
-            indexType = IndexFactory::IndexType::HNSW;
-        } else if (index_type_str == INDEX_TYPE_HNSWFLAT) {
-            indexType = IndexFactory::IndexType::HNSWFLAT;
-        }
-    }
-
     if (server_type == ServerType::INDEX || server_type == ServerType::VDB) {
-        vector_index_->insert(indexType, data, id);
+        vector_index_->insert(data, id);
     }
     if (server_type == ServerType::STORAGE || server_type == ServerType::VDB) {
         vector_storage_->insert(id, json_request);
@@ -110,21 +86,8 @@ void VectorEngine::insert_batch(const rapidjson::Document& json_request) {
         throw std::runtime_error("data format error, vectors size can not match ids");
     }
 
-    // 获取请求参数中的索引类型
-    IndexFactory::IndexType indexType = IndexFactory::IndexType::UNKNOWN;
-    if (json_request.HasMember(REQUEST_INDEX_TYPE) && json_request[REQUEST_INDEX_TYPE].IsString()) {
-        std::string index_type_str = json_request[REQUEST_INDEX_TYPE].GetString();
-        if (index_type_str == INDEX_TYPE_FLAT) {
-            indexType = IndexFactory::IndexType::FLAT;
-        } else if (index_type_str == INDEX_TYPE_HNSW) {
-            indexType = IndexFactory::IndexType::HNSW;
-        } else if (index_type_str == INDEX_TYPE_HNSWFLAT) {
-            indexType = IndexFactory::IndexType::HNSWFLAT;
-        }
-    }
-
     if (server_type == ServerType::INDEX || server_type == ServerType::VDB) {
-        vector_index_->insert_batch(indexType, vectors, ids);
+        vector_index_->insert_batch(vectors, ids);
     }
     if (server_type == ServerType::STORAGE || server_type == ServerType::VDB) {
         vector_storage_->insert_batch(ids, json_request);
@@ -136,10 +99,10 @@ void VectorEngine::reloadDatabase() {
         return;
     }
 
-    wal_manager->loadSnapshot();
+    vector_index_->loadSnapshot();
     std::string operation_type;
     rapidjson::Document json_data;
-    wal_manager->readNextWalLog(&operation_type, &json_data);
+    vector_index_->readNextWalLog(&operation_type, &json_data);
 
     while (!operation_type.empty()) {
         GlobalLogger->info("Operation Type: {}", operation_type);
@@ -161,13 +124,13 @@ void VectorEngine::reloadDatabase() {
 
         // 读取下一条 WAL 日志
         operation_type.clear();
-        wal_manager->readNextWalLog(&operation_type, &json_data);
+        vector_index_->readNextWalLog(&operation_type, &json_data);
     }
 }
 
 void VectorEngine::writeWalLog(const std::string& operation_type, const rapidjson::Document& json_data) {
     std::string version = "1.0";
-    wal_manager->writeWalLog(operation_type, json_data, version);
+    vector_index_->writeWalLog(operation_type, json_data, version);
 }
 
 void VectorEngine::writeWALLogWithID(uint64_t log_id, const std::string& data) {
@@ -175,23 +138,23 @@ void VectorEngine::writeWALLogWithID(uint64_t log_id, const std::string& data) {
     json_data.Parse(data.c_str());
     std::string operation_type = json_data[REQUEST_OPERATION].GetString();
     std::string version = "1.0";
-    wal_manager->writeWALRawLog(log_id, operation_type, data, version);
+    vector_index_->writeWALRawLog(log_id, operation_type, data, version);
 }
 
 void VectorEngine::takeSnapshot() {
     if (server_type == ServerType::STORAGE) {
         throw std::runtime_error("This is storage node, cannot taking snapshot!");
     }
-    wal_manager->takeSnapshot();
+    vector_index_->takeSnapshot();
 }
 
 void VectorEngine::loadSnapshot() {
     if (server_type == ServerType::STORAGE) {
         throw std::runtime_error("This is storage node, cannot loading snapshot!");
     }
-    wal_manager->takeSnapshot();
+    vector_index_->takeSnapshot();
 }
 
 int64_t VectorEngine::getStartIndexID() const {
-    return wal_manager->getID();
+    return vector_index_->getID();
 }
