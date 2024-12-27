@@ -73,12 +73,12 @@ def run_master_server():
         print("Executable not found. Please compile the project first.")
 
 # 运行可执行文件
-def run_proxy_server():
+def run_proxy_server(config):
     executable_path = os.path.join(build_dir, 'proxy_server')
     if os.path.exists(executable_path):
         try:
             proxy_server = subprocess.Popen(
-                [executable_path],
+                [executable_path, config],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True
@@ -116,7 +116,7 @@ def create_cluster():
     # 查看所有节点信息
     get({"instanceId": "instance2"}, "http://localhost:6060/getInstance")
     # 启动代理服务器
-    proxy_server = run_proxy_server()
+    proxy_server = run_proxy_server(project_root + "/config/proxy_conf2.ini")
     print("proxy_server node has started")
     # input()
     # 查看拓扑结构

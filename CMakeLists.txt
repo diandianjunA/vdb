@@ -34,8 +34,8 @@ add_executable(master_server master_server.cpp ${MASTER_SERVER_SOURCES})
 add_executable(proxy_server proxy_server.cpp ${PROXY_SERVER_SOURCES})
 
 target_link_libraries(vdb_server PRIVATE 
-    faiss openblas pthread rocksdb snappy z bz2 zstd lz4 nuraft ssl
-    # faiss openblas pthread rocksdb nuraft ssl
+    # faiss openblas pthread rocksdb snappy z bz2 zstd lz4 nuraft ssl
+    faiss openblas pthread rocksdb nuraft ssl
 )
 target_link_libraries(master_server PRIVATE
     etcd-cpp-api cpprest
