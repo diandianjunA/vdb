@@ -30,6 +30,7 @@ include_directories("/usr/local/cuda-12.2/targets/x86_64-linux/include")
 link_directories("./ThirdParty/OpenCV/lib")
 link_directories("/usr/lib/x86_64-linux-gnu")
 link_directories("/usr/local/lib")
+link_directories("~/anaconda3/lib")
 
 add_executable(vdb_server vdb_server.cpp ${VDB_SERVER_SOURCES})
 add_executable(master_server master_server.cpp ${MASTER_SERVER_SOURCES})
@@ -37,7 +38,7 @@ add_executable(proxy_server proxy_server.cpp ${PROXY_SERVER_SOURCES})
 
 target_link_libraries(vdb_server PRIVATE 
     # faiss openblas pthread rocksdb snappy z bz2 zstd lz4 nuraft ssl
-    faiss openblas pthread rocksdb nuraft ssl
+    faiss faiss_gpu cuvs cublas cudart cuda curand openblas pthread rocksdb nuraft ssl
 )
 target_link_libraries(master_server PRIVATE
     etcd-cpp-api cpprest

@@ -1,3 +1,9 @@
+#pragma once
+
+#include <faiss/Index.h>
+#include <faiss/impl/IDSelector.h>
+#include <vector>
+
 class CAGRAIndex {
 public:
     CAGRAIndex(faiss::Index* index);

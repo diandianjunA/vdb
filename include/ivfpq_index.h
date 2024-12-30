@@ -1,3 +1,9 @@
+#pragma once
+
+#include <faiss/Index.h>
+#include <faiss/impl/IDSelector.h>
+#include <vector>
+
 class IVFPQIndex {
 public:
     IVFPQIndex(faiss::Index* index);
