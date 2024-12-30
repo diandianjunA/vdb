@@ -7,6 +7,7 @@
 #include <faiss/MetricType.h>
 #include <faiss/IndexFlat.h>
 #include <faiss/IndexHNSW.h>
+#include <faiss/IndexIVFPQ.h>
 #include <faiss/gpu/GpuIndexIVFPQ.h>
 #include <faiss/gpu/GpuIndexCagra.h>
 #include <faiss/IndexIDMap.h>
@@ -14,7 +15,6 @@
 #include <faiss/gpu/StandardGpuResources.h>
 #include <faiss/gpu/impl/IndexUtils.h>
 #include <faiss/gpu/utils/DeviceUtils.h>
-#include <gtest/gtest.h>
 #include <random>
 #include <ctime>
  
@@ -59,23 +59,51 @@ void* IndexFactory::init(IndexType type, int dim, int max_elements, MetricType m
             return new FlatGPUIndex(new faiss::IndexIDMap(new faiss::gpu::GpuIndexFlat(&res, dim, faiss_metric, config)));
         }
         case IndexType::IVFPQ: {
-            break;
+            std::srand(static_cast<unsigned>(std::time(0)));
+            faiss::IndexFlatL2 coarseQuantizerL2(dim);
+            faiss::IndexFlatIP coarseQuantizerIP(dim);
+            faiss::Index* quantizer = faiss_metric == faiss::METRIC_L2 ? (faiss::Index*)&coarseQuantizerL2 : (faiss::Index*)&coarseQuantizerIP;
+            int numCentroids = 256;
+            int code = 32;
+            int bitsPerCode = 8;
+            int nprobe = std::min(getRandomIntInRange(40, 1000), numCentroids);
+            faiss::IndexIVFPQ cpuIndex(quantizer, dim, numCentroids, code, bitsPerCode);
+            cpuIndex.metric_type = faiss_metric;
+            cpuIndex.nprobe = nprobe;
+
+            int device = getRandomIntInRange(0, faiss::gpu::getNumDevices() - 1);
+            bool usePrecomputed = true;
+            faiss::gpu::IndicesOptions indicesOpt = faiss::gpu::INDICES_64_BIT;
+            faiss::gpu::StandardGpuResources res;
+
+            faiss::gpu::GpuIndexIVFPQConfig config;
+            config.device = device;
+            config.usePrecomputedTables = usePrecomputed;
+            config.indicesOptions = indicesOpt;
+            config.useFloat16LookupTables = false;
+            config.interleavedLayout = false;
+            config.use_cuvs = true;
+
+            faiss::gpu::GpuIndexIVFPQ gpuIndex(&res, &cpuIndex, config);
+            return new IVFPQIndex(new faiss::IndexIDMap(new faiss::gpu::GpuIndexIVFPQ(&res, &cpuIndex, config)));
         }
         case IndexType::CAGRA: {
             std::srand(static_cast<unsigned>(std::time(0)));
             int device = getRandomIntInRange(0, faiss::gpu::getNumDevices() - 1);
             int graph_degree = getRandomIntInRange(32, 64);
+            int intermediateGraphDegree = getRandomIntInRange(64, 98);
             faiss::gpu::StandardGpuResources res;
             res.noTempMemory();
+
 
             faiss::gpu::GpuIndexCagraConfig config;
             config.device = device;
             config.graph_degree = graph_degree;
-            config.intermediate_graph_degree = opt.intermediateGraphDegree;
-            config.build_algo = opt.buildAlgo;
+            config.intermediate_graph_degree = intermediateGraphDegree;
+            config.build_algo = faiss::gpu::graph_build_algo::NN_DESCENT;
 
-            faiss::gpu::GpuIndexCagra gpuIndex(&res, cpuIndex.d, metric, config);
-            
+            faiss::gpu::GpuIndexCagra gpuIndex(&res, dim, faiss_metric, config);
+            return new CAGRAIndex(new faiss::IndexIDMap(new faiss::gpu::GpuIndexCagra(&res, dim, faiss_metric, config)));
         }
         default:
             return nullptr;

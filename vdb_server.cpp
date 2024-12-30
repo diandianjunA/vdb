@@ -118,6 +118,14 @@ int main(int argc, char* argv[]) {
             IndexFactory::IndexType type = IndexFactory::IndexType::FLAT_GPU;
             void* index = globalIndexFactory->init(type, dim);
             vector_index = new VectorIndex(index, type);
+        } else if (index_type == "IVFPQ") {
+            IndexFactory::IndexType type = IndexFactory::IndexType::IVFPQ;
+            void* index = globalIndexFactory->init(type, dim);
+            vector_index = new VectorIndex(index, type);
+        } else if (index_type == "CARGA") {
+            IndexFactory::IndexType type = IndexFactory::IndexType::CAGRA;
+            void* index = globalIndexFactory->init(type, dim);
+            vector_index = new VectorIndex(index, type);
         }
     }
     if (server_type == ServerType::VDB || server_type == ServerType::STORAGE) {

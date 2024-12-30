@@ -3,6 +3,8 @@
 #include "include/flat_index.h"
 #include "include/hnsw_flat_index.h"
 #include "include/flat_gpu_index.h"
+#include "include/ivfpq_index.h"
+#include "cagra_index.h"
 #include "include/constant.h"
 #include "include/logger.h"
 #include "rapidjson/writer.h"
@@ -42,6 +44,16 @@ std::pair<std::vector<long>, std::vector<float>> VectorIndex::search(const std::
             results = flat_gpu_index->search_vectors(data, k);
             break;
         }
+        case IndexFactory::IndexType::IVFPQ: {
+            IVFPQIndex* ivfpq_index = static_cast<IVFPQIndex*>(index);
+            results = ivfpq_index->search_vectors(data, k);
+            break;
+        }
+        case IndexFactory::IndexType::CAGRA: {
+            CAGRAIndex* cagra_index = static_cast<CAGRAIndex*>(index);
+            results = cagra_index->search_vectors(data, k);
+            break;
+        }
         default:
             break;
     }
@@ -65,6 +77,16 @@ void VectorIndex::insert(const std::vector<float>& data, uint64_t id) {
             flat_gpu_index->insert_vectors(data, id);
             break;
         }
+        case IndexFactory::IndexType::IVFPQ: {
+            IVFPQIndex* ivfpq_index = static_cast<IVFPQIndex*>(index);
+            ivfpq_index->insert_vectors(data, id);
+            break;
+        }
+        case IndexFactory::IndexType::CAGRA: {
+            CAGRAIndex* cagra_index = static_cast<CAGRAIndex*>(index);
+            cagra_index->insert_vectors(data, id);
+            break;
+        }
         default:
             break;
     }
@@ -84,6 +106,16 @@ void VectorIndex::insert_batch(const std::vector<std::vector<float>>& vectors, c
         case IndexFactory::IndexType::FLAT_GPU: {
             FlatGPUIndex* flat_gpu_index = static_cast<FlatGPUIndex*>(index);
             flat_gpu_index->insert_batch_vectors(vectors, ids);
+            break;
+        }
+        case IndexFactory::IndexType::IVFPQ: {
+            IVFPQIndex* ivfpq_index = static_cast<IVFPQIndex*>(index);
+            ivfpq_index->insert_batch_vectors(vectors, ids);
+            break;
+        }
+        case IndexFactory::IndexType::CAGRA: {
+            CAGRAIndex* cagra_index = static_cast<CAGRAIndex*>(index);
+            cagra_index->insert_batch_vectors(vectors, ids);
             break;
         }
         default:
@@ -107,6 +139,16 @@ void VectorIndex::saveIndex(const std::string& folder_path) {
         case IndexFactory::IndexType::FLAT_GPU: {
             FlatGPUIndex* flat_gpu_index = static_cast<FlatGPUIndex*>(index);
             flat_gpu_index->saveIndex(file_path);
+            break;
+        }
+        case IndexFactory::IndexType::IVFPQ: {
+            IVFPQIndex* ivfpq_index = static_cast<IVFPQIndex*>(index);
+            ivfpq_index->saveIndex(file_path);
+            break;
+        }
+        case IndexFactory::IndexType::CAGRA: {
+            CAGRAIndex* cagra_index = static_cast<CAGRAIndex*>(index);
+            cagra_index->saveIndex(file_path);
             break;
         }
         default:
@@ -134,6 +176,16 @@ void VectorIndex::loadIndex(const std::string& folder_path) {
         case IndexFactory::IndexType::FLAT_GPU: {
             FlatGPUIndex* flat_gpu_index = static_cast<FlatGPUIndex*>(index);
             flat_gpu_index->loadIndex(file_path);
+            break;
+        }
+        case IndexFactory::IndexType::IVFPQ: {
+            IVFPQIndex* ivfpq_index = static_cast<IVFPQIndex*>(index);
+            ivfpq_index->loadIndex(file_path);
+            break;
+        }
+        case IndexFactory::IndexType::CAGRA: {
+            CAGRAIndex* cagra_index = static_cast<CAGRAIndex*>(index);
+            cagra_index->loadIndex(file_path);
             break;
         }
         default:
