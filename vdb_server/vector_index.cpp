@@ -2,6 +2,7 @@
 #include "include/index_factory.h"
 #include "include/flat_index.h"
 #include "include/hnsw_flat_index.h"
+#include "include/flat_gpu_index.h"
 #include "include/constant.h"
 #include "include/logger.h"
 #include "rapidjson/writer.h"
@@ -36,6 +37,11 @@ std::pair<std::vector<long>, std::vector<float>> VectorIndex::search(const std::
             HnswFlatIndex* hnsw_flat_index = static_cast<HnswFlatIndex*>(index);
             results = hnsw_flat_index->search_vectors(data, k);
         }
+        case IndexFactory::IndexType::FLAT_GPU: {
+            FlatGPUIndex* flat_gpu_index = static_cast<FlatGPUIndex*>(index);
+            results = flat_gpu_index->search_vectors(data, k);
+            break;
+        }
         default:
             break;
     }
@@ -52,6 +58,12 @@ void VectorIndex::insert(const std::vector<float>& data, uint64_t id) {
         case IndexFactory::IndexType::HNSWFLAT: {
             HnswFlatIndex* hnsw_flat_index = static_cast<HnswFlatIndex*>(index);
             hnsw_flat_index->insert_vectors(data, id);
+            break;
+        }
+        case IndexFactory::IndexType::FLAT_GPU: {
+            FlatGPUIndex* flat_gpu_index = static_cast<FlatGPUIndex*>(index);
+            flat_gpu_index->insert_vectors(data, id);
+            break;
         }
         default:
             break;
@@ -69,6 +81,11 @@ void VectorIndex::insert_batch(const std::vector<std::vector<float>>& vectors, c
             HnswFlatIndex* hnsw_flat_index = static_cast<HnswFlatIndex*>(index);
             hnsw_flat_index->insert_batch_vectors(vectors, ids);
         }
+        case IndexFactory::IndexType::FLAT_GPU: {
+            FlatGPUIndex* flat_gpu_index = static_cast<FlatGPUIndex*>(index);
+            flat_gpu_index->insert_batch_vectors(vectors, ids);
+            break;
+        }
         default:
             break;
     }
@@ -77,11 +94,23 @@ void VectorIndex::insert_batch(const std::vector<std::vector<float>>& vectors, c
 void VectorIndex::saveIndex(const std::string& folder_path) {
     std::string file_path = folder_path + std::to_string(static_cast<int>(type)) + ".index";
 
-    // 根据索引类型调用相应的 saveIndex 函数
-    if (type == IndexFactory::IndexType::FLAT) {
-        static_cast<FlatIndex*>(index)->saveIndex(file_path);
-    }else if (type == IndexFactory::IndexType::HNSWFLAT) {
-        static_cast<HnswFlatIndex*>(index)->saveIndex(file_path);
+    switch (type) {
+        case IndexFactory::IndexType::FLAT: {
+            FlatIndex* flat_index = static_cast<FlatIndex*>(index);
+            flat_index->saveIndex(file_path);
+            break;
+        }
+        case IndexFactory::IndexType::HNSWFLAT: {
+            HnswFlatIndex* hnsw_flat_index = static_cast<HnswFlatIndex*>(index);
+            hnsw_flat_index->saveIndex(file_path);
+        }
+        case IndexFactory::IndexType::FLAT_GPU: {
+            FlatGPUIndex* flat_gpu_index = static_cast<FlatGPUIndex*>(index);
+            flat_gpu_index->saveIndex(file_path);
+            break;
+        }
+        default:
+            break;
     }
 }
 
@@ -92,11 +121,23 @@ void VectorIndex::loadIndex(const std::string& folder_path) {
         return;
     }
 
-    // 根据索引类型调用相应的 loadIndex 函数
-    if (type == IndexFactory::IndexType::FLAT) {
-        static_cast<FlatIndex*>(index)->loadIndex(file_path);
-    } else if (type == IndexFactory::IndexType::HNSWFLAT) {
-        static_cast<HnswFlatIndex*>(index)->loadIndex(file_path);
+    switch (type) {
+        case IndexFactory::IndexType::FLAT: {
+            FlatIndex* flat_index = static_cast<FlatIndex*>(index);
+            flat_index->loadIndex(file_path);
+            break;
+        }
+        case IndexFactory::IndexType::HNSWFLAT: {
+            HnswFlatIndex* hnsw_flat_index = static_cast<HnswFlatIndex*>(index);
+            hnsw_flat_index->loadIndex(file_path);
+        }
+        case IndexFactory::IndexType::FLAT_GPU: {
+            FlatGPUIndex* flat_gpu_index = static_cast<FlatGPUIndex*>(index);
+            flat_gpu_index->loadIndex(file_path);
+            break;
+        }
+        default:
+            break;
     }
 }
 

@@ -48,5 +48,5 @@ def search_vectors(vector, k, url="http://localhost:8080/search", index_type="FL
 
 if __name__ == "__main__":
     # query_vectors(4)
-    vector = [1]
+    vector = [90]
     search_vectors(vector, k=5)

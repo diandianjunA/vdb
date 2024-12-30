@@ -108,11 +108,15 @@ int main(int argc, char* argv[]) {
         std::string index_type = config["index_type"];
         if (index_type == "FLAT") {
             IndexFactory::IndexType type = IndexFactory::IndexType::FLAT;
-            void* index = globalIndexFactory->init(IndexFactory::IndexType::FLAT, dim);
+            void* index = globalIndexFactory->init(type, dim);
             vector_index = new VectorIndex(index, type);
         } else if (index_type == "HNSWFLAT") {
             IndexFactory::IndexType type = IndexFactory::IndexType::HNSWFLAT;
-            void* index = globalIndexFactory->init(IndexFactory::IndexType::HNSWFLAT, dim);
+            void* index = globalIndexFactory->init(type, dim);
+            vector_index = new VectorIndex(index, type);
+        } else if (index_type == "FLAT_GPU") {
+            IndexFactory::IndexType type = IndexFactory::IndexType::FLAT_GPU;
+            void* index = globalIndexFactory->init(type, dim);
             vector_index = new VectorIndex(index, type);
         }
     }

@@ -2,13 +2,14 @@
 
 #include <string>
 
-
-
 class IndexFactory {
 public:
     enum class IndexType {
         FLAT,
         HNSWFLAT,
+        FLAT_GPU,
+        IVFPQ,
+        CAGRA,
         UNKNOWN = -1 
     };
 

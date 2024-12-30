@@ -25,6 +25,7 @@ file(GLOB MASTER_SERVER_SOURCES master_server/*.cpp log/*.cpp)
 file(GLOB PROXY_SERVER_SOURCES proxy_server/*.cpp log/*.cpp)
 
 include_directories("/usr/local/include/")
+include_directories("/usr/local/cuda-12.5/targets/x86_64-linux/include")
 link_directories("./ThirdParty/OpenCV/lib")
 link_directories("/usr/lib/x86_64-linux-gnu")
 link_directories("/usr/local/lib")
