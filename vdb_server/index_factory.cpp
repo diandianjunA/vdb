@@ -4,6 +4,7 @@
 #include "include/flat_gpu_index.h"
 #include "include/ivfpq_index.h"
 #include "include/cagra_index.h"
+#include "include/logger.h"
 #include <faiss/MetricType.h>
 #include <faiss/IndexFlat.h>
 #include <faiss/IndexHNSW.h>
@@ -27,6 +28,15 @@ int getRandomIntInRange(int min, int max) {
     return dis(gen); // 生成并返回随机数
 }
 
+std::vector<float> randVecs(size_t num, size_t dim) {
+    std::vector<float> v(num * dim);
+    auto seed = static_cast<unsigned>(std::time(0));
+
+    faiss::float_rand(v.data(), v.size(), seed);
+
+    return v;
+}
+
 namespace {
     IndexFactory globalIndexFactory;
 }
@@ -42,7 +52,8 @@ void* IndexFactory::init(IndexType type, int dim, int max_elements, MetricType m
             return new FlatIndex(new faiss::IndexIDMap(new faiss::IndexFlat(dim, faiss_metric)));
         }
         case IndexType::HNSWFLAT: {
-            auto index = new faiss::IndexHNSWFlat(dim, 16);
+            int M = 16;
+            auto index = new faiss::IndexHNSWFlat(dim, M);
             index->hnsw.efConstruction = 200;
             index->hnsw.efSearch = 50;
             return new HnswFlatIndex(new faiss::IndexIDMap(index));
@@ -63,13 +74,16 @@ void* IndexFactory::init(IndexType type, int dim, int max_elements, MetricType m
             faiss::IndexFlatL2 coarseQuantizerL2(dim);
             faiss::IndexFlatIP coarseQuantizerIP(dim);
             faiss::Index* quantizer = faiss_metric == faiss::METRIC_L2 ? (faiss::Index*)&coarseQuantizerL2 : (faiss::Index*)&coarseQuantizerIP;
-            int numCentroids = 256;
+            int num_centroids = 256;
             int code = 32;
             int bitsPerCode = 8;
-            int nprobe = std::min(getRandomIntInRange(40, 1000), numCentroids);
-            faiss::IndexIVFPQ cpuIndex(quantizer, dim, numCentroids, code, bitsPerCode);
+            int num_train = num_centroids * 40;
+            int nprobe = std::min(getRandomIntInRange(40, 1000), num_centroids);
+            faiss::IndexIVFPQ cpuIndex(quantizer, dim, num_centroids, code, bitsPerCode);
             cpuIndex.metric_type = faiss_metric;
             cpuIndex.nprobe = nprobe;
+            std::vector<float> train_vec = randVecs(num_train, dim);
+            cpuIndex.train(num_train, train_vec.data());
 
             int device = getRandomIntInRange(0, faiss::gpu::getNumDevices() - 1);
             bool usePrecomputed = true;
@@ -84,7 +98,6 @@ void* IndexFactory::init(IndexType type, int dim, int max_elements, MetricType m
             config.interleavedLayout = false;
             config.use_cuvs = true;
 
-            faiss::gpu::GpuIndexIVFPQ gpuIndex(&res, &cpuIndex, config);
             return new IVFPQIndex(new faiss::IndexIDMap(new faiss::gpu::GpuIndexIVFPQ(&res, &cpuIndex, config)));
         }
         case IndexType::CAGRA: {
@@ -95,6 +108,8 @@ void* IndexFactory::init(IndexType type, int dim, int max_elements, MetricType m
             faiss::gpu::StandardGpuResources res;
             res.noTempMemory();
 
+            int num_train = 2 * getRandomIntInRange(2000, 5000);
+            std::vector<float> train_vec = randVecs(num_train, dim);
 
             faiss::gpu::GpuIndexCagraConfig config;
             config.device = device;
@@ -102,8 +117,14 @@ void* IndexFactory::init(IndexType type, int dim, int max_elements, MetricType m
             config.intermediate_graph_degree = intermediateGraphDegree;
             config.build_algo = faiss::gpu::graph_build_algo::NN_DESCENT;
 
-            faiss::gpu::GpuIndexCagra gpuIndex(&res, dim, faiss_metric, config);
-            return new CAGRAIndex(new faiss::IndexIDMap(new faiss::gpu::GpuIndexCagra(&res, dim, faiss_metric, config)));
+            faiss::gpu::GpuIndexCagra* gpu_index = new faiss::gpu::GpuIndexCagra(&res, dim, faiss_metric, config);
+            int M = 16;
+            faiss::IndexHNSWCagra* cpu_index = new faiss::IndexHNSWCagra(dim, M, faiss_metric);
+            cpu_index->base_level_only = false;
+            cpu_index->hnsw.efConstruction = 200;
+            CAGRAIndex* carga_index = new CAGRAIndex(cpu_index, gpu_index);
+            carga_index->train(num_train, train_vec);
+            return carga_index;
         }
         default:
             return nullptr;

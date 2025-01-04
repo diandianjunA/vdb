@@ -122,7 +122,7 @@ int main(int argc, char* argv[]) {
             IndexFactory::IndexType type = IndexFactory::IndexType::IVFPQ;
             void* index = globalIndexFactory->init(type, dim);
             vector_index = new VectorIndex(index, type);
-        } else if (index_type == "CARGA") {
+        } else if (index_type == "CAGRA") {
             IndexFactory::IndexType type = IndexFactory::IndexType::CAGRA;
             void* index = globalIndexFactory->init(type, dim);
             vector_index = new VectorIndex(index, type);

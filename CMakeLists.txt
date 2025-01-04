@@ -5,6 +5,9 @@ project(vdb LANGUAGES CXX) #设置项目名称 vdb
 set(CMAKE_CXX_STANDARD 17)  
 set(CMAKE_CXX_STANDARD_REQUIRED True)  
 
+set (CMAKE_CXX_LINK_EXECUTABLE "${CMAKE_CXX_LINK_EXECUTABLE} -ldl") 
+# set (LIBCUVS, "/home/xjs/anaconda3/pkgs/libcuvs-24.12.00-cuda12_241211_g0ce6a03_0/lib")
+
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_BINARY_DIR}
@@ -38,7 +41,7 @@ add_executable(proxy_server proxy_server.cpp ${PROXY_SERVER_SOURCES})
 
 target_link_libraries(vdb_server PRIVATE 
     # faiss openblas pthread rocksdb snappy z bz2 zstd lz4 nuraft ssl
-    faiss faiss_gpu cuvs cublas cudart cuda curand openblas pthread rocksdb nuraft ssl
+    faiss faiss_gpu openblas pthread rocksdb snappy z bz2 zstd lz4 nuraft ssl
 )
 target_link_libraries(master_server PRIVATE
     etcd-cpp-api cpprest

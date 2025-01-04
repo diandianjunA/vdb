@@ -98,6 +98,9 @@ void VectorEngine::reloadDatabase() {
     if (server_type == ServerType::STORAGE) {
         return;
     }
+    // if (vector_index_->type == IndexFactory::IndexType::CAGRA) {
+    //     return;
+    // }
 
     vector_index_->loadSnapshot();
     std::string operation_type;

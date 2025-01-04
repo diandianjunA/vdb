@@ -15,7 +15,7 @@ log_state_machine::log_state_machine(VectorEngine* vector_engine) {
 
 ptr<buffer> log_state_machine::commit(const ulong log_idx, buffer& data) {
     std::string content(reinterpret_cast<const char*>(data.data() + data.pos()+sizeof(int)), data.size()-sizeof(int));
-    GlobalLogger->debug("Commit log_idx: {}, content: {}", log_idx, content); // 添加打印日志
+    GlobalLogger->debug("Commit log_idx: {}", log_idx); // 添加打印日志
     
     rapidjson::Document json_request;
     json_request.Parse(content.c_str());
@@ -35,6 +35,6 @@ ptr<buffer> log_state_machine::commit(const ulong log_idx, buffer& data) {
 
 ptr<buffer> log_state_machine::pre_commit(const ulong log_idx, buffer& data) {
     std::string content(reinterpret_cast<const char*>(data.data() + data.pos()+sizeof(int)), data.size()-sizeof(int));
-    GlobalLogger->debug("Pre Commit log_idx: {}, content: {}", log_idx, content); // 添加打印日志
+    GlobalLogger->debug("Pre Commit log_idx: {}", log_idx); // 添加打印日志
     return nullptr;
 }

@@ -9,11 +9,19 @@ IVFPQIndex::IVFPQIndex(faiss::Index* index) : index(index) {};
 
 void IVFPQIndex::insert_vectors(const std::vector<float>& data, uint64_t label) {
     long id = static_cast<long>(label);
-    index->add_with_ids(1, data.data(), &id);
+    try {
+        index->add_with_ids(1, data.data(), &id);
+    } catch (const std::exception& e) {
+        GlobalLogger->error("insert error: {}", e.what());
+    }
 }
 
 void IVFPQIndex::insert_batch_vectors(const std::vector<std::vector<float>>& vectors, const std::vector<long>& ids) {
-    index->add_with_ids(vectors.size(), vectors.data()->data(), ids.data());
+    try {
+        index->add_with_ids(vectors.size(), vectors.data()->data(), ids.data());
+    } catch (std::runtime_error e) {
+        GlobalLogger->error("insert error: {}", e.what());
+    }
 }
 
 void IVFPQIndex::remove_vectors(const std::vector<long>& ids) {

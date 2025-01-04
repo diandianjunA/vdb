@@ -1,5 +1,18 @@
 import requests
 import os
+import numpy as np
+
+def generate_random_float_vector(size=128):
+    """
+    生成一个包含指定数量随机浮点数的向量。
+ 
+    参数:
+    size (int): 向量中浮点数的数量，默认为128。
+ 
+    返回:
+    numpy.ndarray: 包含随机浮点数的向量。
+    """
+    return np.random.rand(size).astype(np.float32).tolist()
 
 def query_vectors(id, url="http://localhost:6061/query", index_type="HNSWFLAT"):
     """
@@ -48,5 +61,5 @@ def search_vectors(vector, k, url="http://localhost:8080/search", index_type="FL
 
 if __name__ == "__main__":
     # query_vectors(4)
-    vector = [90]
+    vector = generate_random_float_vector()
     search_vectors(vector, k=5)

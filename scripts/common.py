@@ -1,5 +1,18 @@
 import requests
 import os
+import numpy as np
+
+def generate_random_float_vector(size=128):
+    """
+    生成一个包含指定数量随机浮点数的向量。
+ 
+    参数:
+    size (int): 向量中浮点数的数量，默认为128。
+ 
+    返回:
+    numpy.ndarray: 包含随机浮点数的向量。
+    """
+    return np.random.rand(size).astype(np.float32).tolist()
 
 def list_node(url="http://localhost:8080/listNode"):
     """
@@ -84,5 +97,5 @@ if __name__ == "__main__":
     # list_node()
     # set_leader()
     # add_follower(4, '127.0.0.1:9093')
-    vector = [9]
+    vector = generate_random_float_vector()
     insert(vector, 10)

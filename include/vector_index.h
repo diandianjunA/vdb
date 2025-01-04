@@ -30,9 +30,10 @@ public:
     void saveLastSnapshotID();
     void loadLastSnapshotID();
 
+    IndexFactory::IndexType type;
+
 private:
     void* index;
-    IndexFactory::IndexType type;
 
     uint64_t increaseID_;
     std::fstream wal_log_file_;
