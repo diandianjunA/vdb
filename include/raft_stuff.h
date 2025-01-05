@@ -11,10 +11,8 @@ public:
 
     void Init();
     ptr<cmd_result<ptr<buffer>>> addSrv(int srv_id, const std::string& srv_endpoint);
-    void enableElectionTimeout(int lower_bound, int upper_bound); // 定义 enableElectionTimeout 方法
     bool isLeader() const; // 添加 isLeader 方法声明
     std::vector<std::tuple<int, std::string, std::string, nuraft::ulong, nuraft::ulong>> getAllNodesInfo() const;
-    std::string getNodeStatus(int node_id) const; // 添加 getNodeStatus 方法声明
     ptr<cmd_result<ptr<buffer>>> appendEntries(const std::string& entry);
 
 private:

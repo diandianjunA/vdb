@@ -132,11 +132,17 @@ void VectorEngine::reloadDatabase() {
 }
 
 void VectorEngine::writeWalLog(const std::string& operation_type, const rapidjson::Document& json_data) {
+    if (server_type == ServerType::STORAGE) {
+        return;
+    }
     std::string version = "1.0";
     vector_index_->writeWalLog(operation_type, json_data, version);
 }
 
 void VectorEngine::writeWALLogWithID(uint64_t log_id, const std::string& data) {
+    if (server_type == ServerType::STORAGE) {
+        return;
+    }
     rapidjson::Document json_data;
     json_data.Parse(data.c_str());
     std::string operation_type = json_data[REQUEST_OPERATION].GetString();
@@ -159,5 +165,8 @@ void VectorEngine::loadSnapshot() {
 }
 
 int64_t VectorEngine::getStartIndexID() const {
+    if (server_type == ServerType::STORAGE) {
+        return 1;
+    }
     return vector_index_->getID();
 }
