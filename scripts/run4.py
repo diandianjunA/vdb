@@ -7,16 +7,16 @@ def create_cluster():
     input("start vdb_server")
     print("vdb_server node has started")
     # 集群添加节点
-    post({"operation": "add_follower","nodeId": 4, "endpoint": "192.168.6.202:9093"}, "http://192.168.6.201:8082/addFollower")
+    post({"operation": "add_follower","nodeId": 2, "endpoint": "192.168.6.202:9091"}, "http://192.168.6.201:8080/addFollower")
     print("raft has been created")
-    get({}, "http://192.168.6.201:8082/listNode")
+    get({}, "http://192.168.6.201:8080/listNode")
     input("start master_server")
     print("master_server node has started")
     # 添加集群元数据
-    post({"instanceId": "instance2", "nodeId": "node3", "url": "http://192.168.6.201:8082", "role": 0, "type": 1}, "http://localhost:6060/addNode")
-    post({"instanceId": "instance2", "nodeId": "node4", "url": "http://192.168.6.202:9092", "role": 1, "type": 2}, "http://localhost:6060/addNode")
+    post({"instanceId": "instance1", "nodeId": "node1", "url": "http://192.168.6.201:8080", "role": 0, "type": 0}, "http://localhost:6060/addNode")
+    post({"instanceId": "instance1", "nodeId": "node2", "url": "http://192.168.6.202:9090", "role": 1, "type": 0}, "http://localhost:6060/addNode")
     # 查看所有节点信息
-    get({"instanceId": "instance2"}, "http://localhost:6060/getInstance")
+    get({"instanceId": "instance1"}, "http://localhost:6060/getInstance")
     # 启动代理服务器
     input("start proxy_server")
     print("proxy_server node has started")

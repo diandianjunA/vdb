@@ -41,7 +41,7 @@ add_executable(proxy_server proxy_server.cpp ${PROXY_SERVER_SOURCES})
 
 target_link_libraries(vdb_server PRIVATE 
     # faiss openblas pthread rocksdb snappy z bz2 zstd lz4 nuraft ssl
-    faiss cudart cublas cuda openblas pthread rocksdb snappy z bz2 zstd lz4 nuraft ssl
+    faiss faiss_gpu cuvs cudart cublas cuda openblas pthread rocksdb snappy z bz2 zstd lz4 nuraft ssl
     # faiss faiss_gpu cuvs cublas cudart cuda curand openblas pthread rocksdb snappy z bz2 zstd lz4 nuraft ssl
 )
 target_link_libraries(master_server PRIVATE

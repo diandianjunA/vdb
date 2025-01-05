@@ -94,6 +94,7 @@ int main(int argc, char* argv[]) {
 
     // 初始化全局IndexFactory
     int dim = std::stoi(config["dim"]); // 向量维度
+    int num_train = std::stoi(config["num_train"]); // 向量维度
     std::string db_path = base_path + "/db";
     std::string wal_path = base_path + "/wal";
     int node_id = std::stoi(config["node_id"]);
@@ -108,23 +109,23 @@ int main(int argc, char* argv[]) {
         std::string index_type = config["index_type"];
         if (index_type == "FLAT") {
             IndexFactory::IndexType type = IndexFactory::IndexType::FLAT;
-            void* index = globalIndexFactory->init(type, dim);
+            void* index = globalIndexFactory->init(type, dim, num_train);
             vector_index = new VectorIndex(index, type);
         } else if (index_type == "HNSWFLAT") {
             IndexFactory::IndexType type = IndexFactory::IndexType::HNSWFLAT;
-            void* index = globalIndexFactory->init(type, dim);
+            void* index = globalIndexFactory->init(type, dim, num_train);
             vector_index = new VectorIndex(index, type);
         } else if (index_type == "FLAT_GPU") {
             IndexFactory::IndexType type = IndexFactory::IndexType::FLAT_GPU;
-            void* index = globalIndexFactory->init(type, dim);
+            void* index = globalIndexFactory->init(type, dim, num_train);
             vector_index = new VectorIndex(index, type);
         } else if (index_type == "IVFPQ") {
             IndexFactory::IndexType type = IndexFactory::IndexType::IVFPQ;
-            void* index = globalIndexFactory->init(type, dim);
+            void* index = globalIndexFactory->init(type, dim, num_train);
             vector_index = new VectorIndex(index, type);
         } else if (index_type == "CAGRA") {
             IndexFactory::IndexType type = IndexFactory::IndexType::CAGRA;
-            void* index = globalIndexFactory->init(type, dim);
+            void* index = globalIndexFactory->init(type, dim, num_train);
             vector_index = new VectorIndex(index, type);
         }
     }

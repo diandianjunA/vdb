@@ -22,10 +22,10 @@ def search_vectors(vector, k, url="http://localhost:8080/search"):
         if response.status_code == 200:
             return True
         else:
-            print(f"Failed to search vector {vector}. Status code: {response.status_code}, Response: {response.text}")
+            print(f"Failed to search vector. Status code: {response.status_code}, Response: {response.text}")
             return False
     except requests.RequestException as e:
-        print(f"Error querying vector {vector}: {e}")
+        print(f"Error querying vector : {e}")
         return False
 
 def query_worker(url, k, vector_length, query_count, success_count):
@@ -72,7 +72,7 @@ if __name__ == "__main__":
     # 配置参数
     VECTOR_LENGTH = 128
     K = 10
-    URL = "http://localhost:8080/search"
+    URL = "http://localhost:6061/search"
     TOTAL_QUERIES = 1000
     THREAD_COUNT = 10
 

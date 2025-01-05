@@ -47,10 +47,9 @@ IndexFactory* getGlobalIndexFactory() {
 
 void* IndexFactory::init(IndexType type, int dim, int max_elements, MetricType metric) {
     faiss::MetricType faiss_metric = (metric == MetricType::L2) ? faiss::METRIC_L2 : faiss::METRIC_INNER_PRODUCT;
-    int num_train = 1000;
+    int num_train = 100000;
     switch (type) {
         case IndexType::FLAT: {
-            std::vector<float> train_vec = randVecs(num_train, dim);
             FlatIndex* index = new FlatIndex(new faiss::IndexIDMap(new faiss::IndexFlat(dim, faiss_metric)));
             std::vector<float> train_vec = randVecs(num_train, dim);
             index->train(num_train, train_vec);

@@ -89,26 +89,26 @@ void ProxyHttpServer::forwardRequest(const httplib::Request& req, httplib::Respo
         return;
     }
 
-    size_t nodeIndex = 0;
+    size_t nodeIndex = nextNodeIndex_.load() % nodes_[activeIndex].size();;
 
     // 检查是否需要强制路由到主节点
     if (leader_request.find(path) != leader_request.end()) {
         if (index_cannot.find(path) != index_cannot.end()) {
-            for (size_t i = 0; i < nodes_[activeIndex].size(); ++i) {
+            for (size_t i = nodeIndex; ; i = (i + 1) % nodes_[activeIndex].size()) {
                 if (nodes_[activeIndex][i].role == 0 && nodes_[activeIndex][i].type != 1) {
                     nodeIndex = i;
                     break;
                 }
             }
         } else if (storage_cannot.find(path) != storage_cannot.end()) {
-            for (size_t i = 0; i < nodes_[activeIndex].size(); ++i) {
+            for (size_t i = nodeIndex; ; i = (i + 1) % nodes_[activeIndex].size()) {
                 if (nodes_[activeIndex][i].role == 0 && nodes_[activeIndex][i].type != 2) {
                     nodeIndex = i;
                     break;
                 }
             }
         } else {
-            for (size_t i = 0; i < nodes_[activeIndex].size(); ++i) {
+            for (size_t i = nodeIndex; ; i = (i + 1) % nodes_[activeIndex].size()) {
                 if (nodes_[activeIndex][i].role == 0) {
                     nodeIndex = i;
                     break;
@@ -117,43 +117,47 @@ void ProxyHttpServer::forwardRequest(const httplib::Request& req, httplib::Respo
         }
     } else {
         if (index_cannot.find(path) != index_cannot.end()) {
-            for (size_t i = 0; i < nodes_[activeIndex].size(); ++i) {
+            for (size_t i = nodeIndex; ; i = (i + 1) % nodes_[activeIndex].size()) {
                 if (nodes_[activeIndex][i].type != 1) {
                     nodeIndex = i;
                     break;
                 }
             }
         } else if (storage_cannot.find(path) != storage_cannot.end()) {
-            for (size_t i = 0; i < nodes_[activeIndex].size(); ++i) {
+            for (size_t i = nodeIndex; ; i = (i + 1) % nodes_[activeIndex].size()) {
                 if (nodes_[activeIndex][i].type != 2) {
                     nodeIndex = i;
                     break;
                 }
             }
-        } else {
-            nodeIndex = nextNodeIndex_.fetch_add(1) % nodes_[activeIndex].size();
         }
     }
+
+    nextNodeIndex_.store(nodeIndex + 1);
 
     const auto& targetNode = nodes_[activeIndex][nodeIndex];
     std::string targetUrl = targetNode.url + path;
     GlobalLogger->info("Forwarding request to: {}", targetUrl);
 
+    CURL *curl = curl_easy_init();
+    curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 3); //连接超时限制
+	curl_easy_setopt(curl, CURLOPT_TIMEOUT, 20); //整个CURL操作的超时限制
+
     // 设置 CURL 选项
-    curl_easy_setopt(curlHandle_, CURLOPT_URL, targetUrl.c_str());
+    curl_easy_setopt(curl, CURLOPT_URL, targetUrl.c_str());
     if (req.method == "POST") {
-        curl_easy_setopt(curlHandle_, CURLOPT_POSTFIELDS, req.body.c_str());
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, req.body.c_str());
     } else {
-        curl_easy_setopt(curlHandle_, CURLOPT_HTTPGET, 1L);
+        curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);
     }
-    curl_easy_setopt(curlHandle_, CURLOPT_WRITEFUNCTION, writeCallback);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeCallback);
 
     // 响应数据容器
     std::string response_data;
-    curl_easy_setopt(curlHandle_, CURLOPT_WRITEDATA, &response_data);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response_data);
 
     // 执行 CURL 请求
-    CURLcode curl_res = curl_easy_perform(curlHandle_);
+    CURLcode curl_res = curl_easy_perform(curl);
     if (curl_res != CURLE_OK) {
         GlobalLogger->error("curl_easy_perform() failed: {}", curl_easy_strerror(curl_res));
         res.status = 500;
@@ -169,6 +173,7 @@ void ProxyHttpServer::forwardRequest(const httplib::Request& req, httplib::Respo
             res.set_content(response_data, "application/json");
         }
     }
+    curl_easy_cleanup(curl);
 }
 
 size_t ProxyHttpServer::writeCallback(void *contents, size_t size, size_t nmemb, void *userp) {
