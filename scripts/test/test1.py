@@ -73,7 +73,7 @@ if __name__ == "__main__":
     VECTOR_LENGTH = 128
     K = 5
     URL = "http://localhost:6061/search"
-    TOTAL_QUERIES = 1000
+    TOTAL_QUERIES = 10000
     THREAD_COUNT = 1
 
     test_query_throughput(URL, K, VECTOR_LENGTH, TOTAL_QUERIES, THREAD_COUNT)

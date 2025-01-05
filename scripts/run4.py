@@ -68,8 +68,8 @@ def generate_random_float_vector(size=128):
 def test1():
     vector = generate_random_float_vector()
     post({"operation": "insert", "object": {"id": 6, "vector": vector, "int_field": 49}}, "http://localhost:6061/insert")
-    post({"operation": "search", "vector": vector, "k": 5}, "http://localhost:6061/search")
     post({"operation": "query", "id": 6,}, "http://localhost:6061/query")
+    post({"operation": "search", "vector": vector, "k": 5}, "http://localhost:6061/search")
 
 # 主函数
 def main():

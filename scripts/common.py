@@ -69,7 +69,7 @@ def add_follower(nodeId, endpoint, url="http://localhost:8082/addFollower"):
     except requests.RequestException as e:
         print(f"Error add follower: {e}")
 
-def insert(vector, id, url="http://localhost:8080/insert"):
+def insert(vector, id, url="http://localhost:9090/insert"):
     """
     将向量数据发送到服务器
 

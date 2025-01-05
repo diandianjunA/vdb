@@ -20,6 +20,8 @@ public:
 
     void saveIndex(const std::string& file_path);
     void loadIndex(const std::string& file_path);
+
+    void update_index();
     
 private:
     faiss::gpu::GpuIndexCagra* gpu_index;

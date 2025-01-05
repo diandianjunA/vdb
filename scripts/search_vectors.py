@@ -36,7 +36,7 @@ def query_vectors(id, url="http://localhost:6061/query", index_type="HNSWFLAT"):
     except requests.RequestException as e:
         print(f"Error inserting vector ID {id}: {e}")
 
-def search_vectors(vector, k, url="http://localhost:9090/search", index_type="FLAT"):
+def search_vectors(vector, k, url="http://localhost:6061/search", index_type="FLAT"):
     """
     根据id查询向量
 

@@ -34,6 +34,7 @@ link_directories("./ThirdParty/OpenCV/lib")
 link_directories("/usr/lib/x86_64-linux-gnu")
 link_directories("/usr/local/lib")
 link_directories("~/anaconda3/lib")
+include_directories("/usr/local/cuda-12.5/lib64")
 
 add_executable(vdb_server vdb_server.cpp ${VDB_SERVER_SOURCES})
 add_executable(master_server master_server.cpp ${MASTER_SERVER_SOURCES})

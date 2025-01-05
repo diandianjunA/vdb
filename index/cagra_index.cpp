@@ -39,7 +39,6 @@ std::pair<std::vector<long>, std::vector<float>> CAGRAIndex::search_vectors(cons
     std::vector<long> indices(num_queries * k);
     std::vector<float> distances(num_queries * k);
     
-    gpu_index->copyFrom(dynamic_cast<faiss::IndexHNSWCagra*>(cpu_index));
     gpu_index->search(num_queries, query.data(), k, distances.data(), indices.data());
     return {indices, distances};
 }
@@ -63,9 +62,13 @@ void CAGRAIndex::loadIndex(const std::string& file_path) {
 
 void CAGRAIndex::train(int num_train, const std::vector<float>& train_vec) {
     gpu_index->train(num_train, train_vec.data());
-    gpu_index->copyTo(dynamic_cast<faiss::IndexHNSWCagra*>(cpu_index));
+    // gpu_index->copyTo(dynamic_cast<faiss::IndexHNSWCagra*>(cpu_index));
 }
 
 void CAGRAIndex::add(int num_train, const std::vector<float>& train_vec) {
     cpu_index->add(num_train, train_vec.data());
+}
+
+void CAGRAIndex::update_index() {
+    gpu_index->copyFrom(dynamic_cast<faiss::IndexHNSWCagra*>(cpu_index));
 }

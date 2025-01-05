@@ -70,7 +70,7 @@ int main(int argc, char* argv[]) {
     auto config = readConfigFile(config_file_path);
 
     init_global_logger();
-    set_log_level(spdlog::level::info);
+    set_log_level(spdlog::level::debug);
 
     GlobalLogger->info("Global logger initialized");
 
