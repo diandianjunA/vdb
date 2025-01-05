@@ -34,7 +34,7 @@ int main(int argc, char* argv[]) {
     auto config = readConfigFile(config_file_path);
 
     init_global_logger();
-    set_log_level(spdlog::level::debug);
+    set_log_level(spdlog::level::warn);
 
     std::string master_host = config["master_host"]; // Master Server 地址
     int master_port = std::stoi(config["master_port"]); // Master Server 端口

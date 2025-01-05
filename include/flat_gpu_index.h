@@ -12,6 +12,7 @@ public:
     std::pair<std::vector<long>, std::vector<float>> search_vectors(const std::vector<float>& query, int k);
 
     void train(int num_train, const std::vector<float>& train_vec);
+    void add(int num_train, const std::vector<float>& train_vec);
 
     void saveIndex(const std::string& file_path);
     void loadIndex(const std::string& file_path);

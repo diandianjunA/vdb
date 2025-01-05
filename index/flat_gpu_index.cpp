@@ -55,3 +55,7 @@ void FlatGPUIndex::loadIndex(const std::string& file_path) {
 void FlatGPUIndex::train(int num_train, const std::vector<float>& train_vec) {
     index->train(num_train, train_vec.data());
 }
+
+void FlatGPUIndex::add(int num_train, const std::vector<float>& train_vec) {
+    index->add(num_train, train_vec.data());
+}

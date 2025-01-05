@@ -65,3 +65,7 @@ void CAGRAIndex::train(int num_train, const std::vector<float>& train_vec) {
     gpu_index->train(num_train, train_vec.data());
     gpu_index->copyTo(dynamic_cast<faiss::IndexHNSWCagra*>(cpu_index));
 }
+
+void CAGRAIndex::add(int num_train, const std::vector<float>& train_vec) {
+    cpu_index->add(num_train, train_vec.data());
+}

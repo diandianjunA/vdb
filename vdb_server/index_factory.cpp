@@ -45,14 +45,14 @@ IndexFactory* getGlobalIndexFactory() {
     return &globalIndexFactory;
 }
 
-void* IndexFactory::init(IndexType type, int dim, int max_elements, MetricType metric) {
+void* IndexFactory::init(IndexType type, int dim, int num_add, MetricType metric) {
     faiss::MetricType faiss_metric = (metric == MetricType::L2) ? faiss::METRIC_L2 : faiss::METRIC_INNER_PRODUCT;
-    int num_train = 100000;
+    int num_train = 1000;
     switch (type) {
         case IndexType::FLAT: {
             FlatIndex* index = new FlatIndex(new faiss::IndexIDMap(new faiss::IndexFlat(dim, faiss_metric)));
-            std::vector<float> train_vec = randVecs(num_train, dim);
-            index->train(num_train, train_vec);
+            std::vector<float> add_vec = randVecs(num_add, dim);
+            index->add(num_add, add_vec);
             return index;
         }
         case IndexType::HNSWFLAT: {
@@ -61,8 +61,8 @@ void* IndexFactory::init(IndexType type, int dim, int max_elements, MetricType m
             hnsw_index->hnsw.efConstruction = 200;
             hnsw_index->hnsw.efSearch = 50;
             HnswFlatIndex* index = new HnswFlatIndex(new faiss::IndexIDMap(hnsw_index));
-            std::vector<float> train_vec = randVecs(num_train, dim);
-            index->train(num_train, train_vec);
+            std::vector<float> add_vec = randVecs(num_add, dim);
+            index->add(num_add, add_vec);
             return index;
         }
         case IndexType::FLAT_GPU: {
@@ -75,8 +75,8 @@ void* IndexFactory::init(IndexType type, int dim, int max_elements, MetricType m
             config.device = device;
             config.useFloat16 = false;
             FlatGPUIndex* index = new FlatGPUIndex(new faiss::IndexIDMap(new faiss::gpu::GpuIndexFlat(&res, dim, faiss_metric, config)));
-            std::vector<float> train_vec = randVecs(num_train, dim);
-            index->train(num_train, train_vec);
+            std::vector<float> add_vec = randVecs(num_add, dim);
+            index->add(num_add, add_vec);
             return index;
         }
         case IndexType::IVFPQ: {
@@ -108,6 +108,8 @@ void* IndexFactory::init(IndexType type, int dim, int max_elements, MetricType m
             IVFPQIndex* index = new IVFPQIndex(new faiss::IndexIDMap(new faiss::gpu::GpuIndexIVFPQ(&res, &cpuIndex, config)));
             std::vector<float> train_vec = randVecs(num_train, dim);
             index->train(num_train, train_vec);
+            std::vector<float> add_vec = randVecs(num_add, dim);
+            index->add(num_add, add_vec);
             return index;
         }
         case IndexType::CAGRA: {
@@ -132,6 +134,8 @@ void* IndexFactory::init(IndexType type, int dim, int max_elements, MetricType m
             CAGRAIndex* index = new CAGRAIndex(cpu_index, gpu_index);
             std::vector<float> train_vec = randVecs(num_train, dim);
             index->train(num_train, train_vec);
+            std::vector<float> add_vec = randVecs(num_add, dim);
+            index->add(num_add, add_vec);
             return index;
         }
         default:

@@ -5,7 +5,7 @@ project(vdb LANGUAGES CXX) #设置项目名称 vdb
 set(CMAKE_CXX_STANDARD 17)  
 set(CMAKE_CXX_STANDARD_REQUIRED True)  
 
-# set (CMAKE_CXX_LINK_EXECUTABLE "${CMAKE_CXX_LINK_EXECUTABLE} -ldl") 
+set (CMAKE_CXX_LINK_EXECUTABLE "${CMAKE_CXX_LINK_EXECUTABLE} -ldl") 
 # set (LIBCUVS, "/home/xjs/anaconda3/pkgs/libcuvs-24.12.00-cuda12_241211_g0ce6a03_0/lib")
 
 include_directories(
@@ -29,7 +29,7 @@ file(GLOB PROXY_SERVER_SOURCES proxy_server/*.cpp log/*.cpp)
 
 include_directories("/usr/local/include/")
 include_directories("/usr/local/cuda-12.5/targets/x86_64-linux/include")
-# include_directories("/usr/local/cuda-12.2/targets/x86_64-linux/include")
+include_directories("/usr/local/cuda-12.2/targets/x86_64-linux/include")
 link_directories("./ThirdParty/OpenCV/lib")
 link_directories("/usr/lib/x86_64-linux-gnu")
 link_directories("/usr/local/lib")

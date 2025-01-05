@@ -55,3 +55,7 @@ void HnswFlatIndex::loadIndex(const std::string& file_path) {
 void HnswFlatIndex::train(int num_train, const std::vector<float>& train_vec) {
     index->train(num_train, train_vec.data());
 }
+
+void HnswFlatIndex::add(int num_train, const std::vector<float>& train_vec) {
+    index->add(num_train, train_vec.data());
+}
