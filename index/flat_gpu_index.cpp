@@ -10,11 +10,11 @@ FlatGPUIndex::FlatGPUIndex(faiss::Index* index) : index(index) {
 
 void FlatGPUIndex::insert_vectors(const std::vector<float>& data, uint64_t label) {
     long id = static_cast<long>(label);
-    index->add_with_ids(1, data.data(), &id);
+    id_map->add_with_ids(1, data.data(), &id);
 }
 
 void FlatGPUIndex::insert_batch_vectors(const std::vector<std::vector<float>>& vectors, const std::vector<long>& ids) {
-    index->add_with_ids(vectors.size(), vectors.data()->data(), ids.data());
+    id_map->add_with_ids(vectors.size(), vectors.data()->data(), ids.data());
 }
 
 std::pair<std::vector<long>, std::vector<float>> FlatGPUIndex::search_vectors(const std::vector<float>& query, int k) {
@@ -28,13 +28,8 @@ std::pair<std::vector<long>, std::vector<float>> FlatGPUIndex::search_vectors(co
 }
 
 void FlatGPUIndex::remove_vectors(const std::vector<long>& ids) {
-    faiss::IndexIDMap* id_map =  dynamic_cast<faiss::IndexIDMap*>(index);
-    if (id_map) {
-        faiss::IDSelectorBatch selector(ids.size(), ids.data());
-        id_map->remove_ids(selector);
-    } else {
-        throw std::runtime_error("Underlying Faiss index is not an IndexIDMap");
-    }
+    faiss::IDSelectorBatch selector(ids.size(), ids.data());
+    id_map->remove_ids(selector);
 }
 
 void FlatGPUIndex::saveIndex(const std::string& file_path) {

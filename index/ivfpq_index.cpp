@@ -12,7 +12,7 @@ IVFPQIndex::IVFPQIndex(faiss::Index* index) : index(index) {
 void IVFPQIndex::insert_vectors(const std::vector<float>& data, uint64_t label) {
     long id = static_cast<long>(label);
     try {
-        index->add_with_ids(1, data.data(), &id);
+        id_map->add_with_ids(1, data.data(), &id);
     } catch (const std::exception& e) {
         GlobalLogger->error("insert error: {}", e.what());
     }
@@ -20,20 +20,15 @@ void IVFPQIndex::insert_vectors(const std::vector<float>& data, uint64_t label) 
 
 void IVFPQIndex::insert_batch_vectors(const std::vector<std::vector<float>>& vectors, const std::vector<long>& ids) {
     try {
-        index->add_with_ids(vectors.size(), vectors.data()->data(), ids.data());
+        id_map->add_with_ids(vectors.size(), vectors.data()->data(), ids.data());
     } catch (std::runtime_error e) {
         GlobalLogger->error("insert error: {}", e.what());
     }
 }
 
 void IVFPQIndex::remove_vectors(const std::vector<long>& ids) {
-    faiss::IndexIDMap* id_map =  dynamic_cast<faiss::IndexIDMap*>(index);
-    if (id_map) {
-        faiss::IDSelectorBatch selector(ids.size(), ids.data());
-        id_map->remove_ids(selector);
-    } else {
-        throw std::runtime_error("Underlying Faiss index is not an IndexIDMap");
-    }
+    faiss::IDSelectorBatch selector(ids.size(), ids.data());
+    id_map->remove_ids(selector);
 }
 
 std::pair<std::vector<long>, std::vector<float>> IVFPQIndex::search_vectors(const std::vector<float>& query, int k) {
