@@ -19,4 +19,5 @@ public:
     void loadIndex(const std::string& file_path);
 private:
     faiss::Index* index;
+    faiss::IndexIDMap* id_map;
 };

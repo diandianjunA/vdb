@@ -4,7 +4,9 @@
 #include <faiss/index_io.h> 
 #include <fstream>
 
-FlatGPUIndex::FlatGPUIndex(faiss::Index* index) : index(index) {}
+FlatGPUIndex::FlatGPUIndex(faiss::Index* index) : index(index) {
+    this->id_map = new faiss::IndexIDMap(index);
+}
 
 void FlatGPUIndex::insert_vectors(const std::vector<float>& data, uint64_t label) {
     long id = static_cast<long>(label);

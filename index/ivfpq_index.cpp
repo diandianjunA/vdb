@@ -5,7 +5,9 @@
 #include <fstream>
 #include "ivfpq_index.h"
 
-IVFPQIndex::IVFPQIndex(faiss::Index* index) : index(index) {};
+IVFPQIndex::IVFPQIndex(faiss::Index* index) : index(index) {
+    this->id_map = new faiss::IndexIDMap(index);
+};
 
 void IVFPQIndex::insert_vectors(const std::vector<float>& data, uint64_t label) {
     long id = static_cast<long>(label);

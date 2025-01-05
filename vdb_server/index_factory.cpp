@@ -50,7 +50,7 @@ void* IndexFactory::init(IndexType type, int dim, int num_add, MetricType metric
     int num_train = 1000;
     switch (type) {
         case IndexType::FLAT: {
-            FlatIndex* index = new FlatIndex(new faiss::IndexIDMap(new faiss::IndexFlat(dim, faiss_metric)));
+            FlatIndex* index = new FlatIndex(new faiss::IndexFlat(dim, faiss_metric));
             std::vector<float> add_vec = randVecs(num_add, dim);
             index->add(num_add, add_vec);
             return index;
@@ -60,7 +60,7 @@ void* IndexFactory::init(IndexType type, int dim, int num_add, MetricType metric
             faiss::IndexHNSWFlat* hnsw_index = new faiss::IndexHNSWFlat(dim, M);
             hnsw_index->hnsw.efConstruction = 200;
             hnsw_index->hnsw.efSearch = 50;
-            HnswFlatIndex* index = new HnswFlatIndex(new faiss::IndexIDMap(hnsw_index));
+            HnswFlatIndex* index = new HnswFlatIndex(hnsw_index);
             std::vector<float> add_vec = randVecs(num_add, dim);
             index->add(num_add, add_vec);
             return index;
@@ -74,7 +74,7 @@ void* IndexFactory::init(IndexType type, int dim, int num_add, MetricType metric
             faiss::gpu::GpuIndexFlatConfig config;
             config.device = device;
             config.useFloat16 = false;
-            FlatGPUIndex* index = new FlatGPUIndex(new faiss::IndexIDMap(new faiss::gpu::GpuIndexFlat(&res, dim, faiss_metric, config)));
+            FlatGPUIndex* index = new FlatGPUIndex(new faiss::gpu::GpuIndexFlat(&res, dim, faiss_metric, config));
             std::vector<float> add_vec = randVecs(num_add, dim);
             index->add(num_add, add_vec);
             return index;
@@ -105,7 +105,7 @@ void* IndexFactory::init(IndexType type, int dim, int num_add, MetricType metric
             config.interleavedLayout = false;
             config.use_cuvs = true;
 
-            IVFPQIndex* index = new IVFPQIndex(new faiss::IndexIDMap(new faiss::gpu::GpuIndexIVFPQ(&res, &cpuIndex, config)));
+            IVFPQIndex* index = new IVFPQIndex(new faiss::gpu::GpuIndexIVFPQ(&res, &cpuIndex, config));
             std::vector<float> train_vec = randVecs(num_train, dim);
             index->train(num_train, train_vec);
             std::vector<float> add_vec = randVecs(num_add, dim);
