@@ -2,6 +2,7 @@
 #include <faiss/gpu/GpuIndexFlat.h>
 #include <faiss/gpu/StandardGpuResources.h>
 #include <faiss/gpu/impl/IndexUtils.h>
+#include <faiss/IndexIDMap.h>
 
 class FlatGPUIndex {
 public:
@@ -18,4 +19,5 @@ public:
     void loadIndex(const std::string& file_path);
 private:
     faiss::Index* index;
+    faiss::IndexIDMap* id_map;
 };

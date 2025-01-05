@@ -3,6 +3,7 @@
 #include <faiss/Index.h>
 #include <faiss/impl/IDSelector.h>
 #include <vector>
+#include <faiss/IndexIDMap.h>
 
 class FlatIndex {
 public:

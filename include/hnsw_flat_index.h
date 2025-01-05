@@ -2,6 +2,7 @@
 
 #include <faiss/IndexHNSW.h>
 #include <vector>
+#include <faiss/IndexIDMap.h>
 
 class HnswFlatIndex {
 public:
