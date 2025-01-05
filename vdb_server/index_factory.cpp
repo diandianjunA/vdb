@@ -47,16 +47,24 @@ IndexFactory* getGlobalIndexFactory() {
 
 void* IndexFactory::init(IndexType type, int dim, int max_elements, MetricType metric) {
     faiss::MetricType faiss_metric = (metric == MetricType::L2) ? faiss::METRIC_L2 : faiss::METRIC_INNER_PRODUCT;
+    int num_train = 1000;
     switch (type) {
         case IndexType::FLAT: {
-            return new FlatIndex(new faiss::IndexIDMap(new faiss::IndexFlat(dim, faiss_metric)));
+            std::vector<float> train_vec = randVecs(num_train, dim);
+            FlatIndex* index = new FlatIndex(new faiss::IndexIDMap(new faiss::IndexFlat(dim, faiss_metric)));
+            std::vector<float> train_vec = randVecs(num_train, dim);
+            index->train(num_train, train_vec);
+            return index;
         }
         case IndexType::HNSWFLAT: {
             int M = 16;
-            auto index = new faiss::IndexHNSWFlat(dim, M);
-            index->hnsw.efConstruction = 200;
-            index->hnsw.efSearch = 50;
-            return new HnswFlatIndex(new faiss::IndexIDMap(index));
+            faiss::IndexHNSWFlat* hnsw_index = new faiss::IndexHNSWFlat(dim, M);
+            hnsw_index->hnsw.efConstruction = 200;
+            hnsw_index->hnsw.efSearch = 50;
+            HnswFlatIndex* index = new HnswFlatIndex(new faiss::IndexIDMap(hnsw_index));
+            std::vector<float> train_vec = randVecs(num_train, dim);
+            index->train(num_train, train_vec);
+            return index;
         }
         case IndexType::FLAT_GPU: {
             std::srand(static_cast<unsigned>(std::time(0)));
@@ -67,7 +75,10 @@ void* IndexFactory::init(IndexType type, int dim, int max_elements, MetricType m
             faiss::gpu::GpuIndexFlatConfig config;
             config.device = device;
             config.useFloat16 = false;
-            return new FlatGPUIndex(new faiss::IndexIDMap(new faiss::gpu::GpuIndexFlat(&res, dim, faiss_metric, config)));
+            FlatGPUIndex* index = new FlatGPUIndex(new faiss::IndexIDMap(new faiss::gpu::GpuIndexFlat(&res, dim, faiss_metric, config)));
+            std::vector<float> train_vec = randVecs(num_train, dim);
+            index->train(num_train, train_vec);
+            return index;
         }
         case IndexType::IVFPQ: {
             std::srand(static_cast<unsigned>(std::time(0)));
@@ -77,13 +88,10 @@ void* IndexFactory::init(IndexType type, int dim, int max_elements, MetricType m
             int num_centroids = 256;
             int code = 32;
             int bitsPerCode = 8;
-            int num_train = num_centroids * 40;
             int nprobe = std::min(getRandomIntInRange(40, 1000), num_centroids);
             faiss::IndexIVFPQ cpuIndex(quantizer, dim, num_centroids, code, bitsPerCode);
             cpuIndex.metric_type = faiss_metric;
             cpuIndex.nprobe = nprobe;
-            std::vector<float> train_vec = randVecs(num_train, dim);
-            cpuIndex.train(num_train, train_vec.data());
 
             int device = getRandomIntInRange(0, faiss::gpu::getNumDevices() - 1);
             bool usePrecomputed = true;
@@ -98,7 +106,10 @@ void* IndexFactory::init(IndexType type, int dim, int max_elements, MetricType m
             config.interleavedLayout = false;
             config.use_cuvs = true;
 
-            return new IVFPQIndex(new faiss::IndexIDMap(new faiss::gpu::GpuIndexIVFPQ(&res, &cpuIndex, config)));
+            IVFPQIndex* index = new IVFPQIndex(new faiss::IndexIDMap(new faiss::gpu::GpuIndexIVFPQ(&res, &cpuIndex, config)));
+            std::vector<float> train_vec = randVecs(num_train, dim);
+            index->train(num_train, train_vec);
+            return index;
         }
         case IndexType::CAGRA: {
             std::srand(static_cast<unsigned>(std::time(0)));
@@ -107,9 +118,6 @@ void* IndexFactory::init(IndexType type, int dim, int max_elements, MetricType m
             int intermediateGraphDegree = getRandomIntInRange(64, 98);
             faiss::gpu::StandardGpuResources res;
             res.noTempMemory();
-
-            int num_train = 2 * getRandomIntInRange(2000, 5000);
-            std::vector<float> train_vec = randVecs(num_train, dim);
 
             faiss::gpu::GpuIndexCagraConfig config;
             config.device = device;
@@ -122,9 +130,10 @@ void* IndexFactory::init(IndexType type, int dim, int max_elements, MetricType m
             faiss::IndexHNSWCagra* cpu_index = new faiss::IndexHNSWCagra(dim, M, faiss_metric);
             cpu_index->base_level_only = false;
             cpu_index->hnsw.efConstruction = 200;
-            CAGRAIndex* carga_index = new CAGRAIndex(cpu_index, gpu_index);
-            carga_index->train(num_train, train_vec);
-            return carga_index;
+            CAGRAIndex* index = new CAGRAIndex(cpu_index, gpu_index);
+            std::vector<float> train_vec = randVecs(num_train, dim);
+            index->train(num_train, train_vec);
+            return index;
         }
         default:
             return nullptr;

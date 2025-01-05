@@ -51,3 +51,7 @@ void FlatIndex::loadIndex(const std::string& file_path) {
         GlobalLogger->warn("File not found: {}. Skipping loading index.", file_path);
     }
 }
+
+void FlatIndex::train(int num_train, const std::vector<float>& train_vec) {
+    index->train(num_train, train_vec.data());
+}
