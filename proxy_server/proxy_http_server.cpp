@@ -5,6 +5,7 @@
 #include "rapidjson/stringbuffer.h"
 #include <iostream>
 #include <sstream>
+#include <chrono>
 
 ProxyHttpServer::ProxyHttpServer(const std::string& masterServerHost, int masterServerPort, const std::string& instanceId)
 : masterServerHost_(masterServerHost), masterServerPort_(masterServerPort), instanceId_(instanceId), curlHandle_(nullptr), activeNodesIndex_(0) , nextNodeIndex_(0), running_(true) {
@@ -81,6 +82,7 @@ void ProxyHttpServer::setupForwarding() {
 }
 
 void ProxyHttpServer::forwardRequest(const httplib::Request& req, httplib::Response& res, const std::string& path) {
+    auto start = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     int activeIndex = activeNodesIndex_.load(); // 读取当前活动的数组索引
     if (nodes_[activeIndex].empty()) {
         GlobalLogger->error("No available nodes for forwarding");
@@ -156,6 +158,7 @@ void ProxyHttpServer::forwardRequest(const httplib::Request& req, httplib::Respo
     std::string response_data;
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response_data);
 
+    auto end = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     // 执行 CURL 请求
     CURLcode curl_res = curl_easy_perform(curl);
     if (curl_res != CURLE_OK) {
@@ -174,6 +177,7 @@ void ProxyHttpServer::forwardRequest(const httplib::Request& req, httplib::Respo
         }
     }
     curl_easy_cleanup(curl);
+    GlobalLogger->debug("收到请求的时间:{}, 转发请求的时间:{}", start, end);
 }
 
 size_t ProxyHttpServer::writeCallback(void *contents, size_t size, size_t nmemb, void *userp) {

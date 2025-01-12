@@ -2,6 +2,7 @@ import os
 import subprocess
 import requests
 import numpy as np
+import time
 
 def create_cluster():
     input("start vdb_server")
@@ -69,6 +70,7 @@ def test1():
     vector = generate_random_float_vector()
     post({"operation": "insert", "object": {"id": 6, "vector": vector, "int_field": 49}}, "http://localhost:6061/insert")
     post({"operation": "query", "id": 6,}, "http://localhost:6061/query")
+    time.sleep(0.5)
     post({"operation": "search", "vector": vector, "k": 5}, "http://localhost:6061/search")
 
 # 主函数

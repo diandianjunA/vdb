@@ -27,7 +27,11 @@ std::pair<std::vector<long>, std::vector<float>> VectorEngine::search(const rapi
     }
     int k = json_request[REQUEST_K].GetInt();
 
-    return vector_index_->search(data, k);
+    auto start = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    auto res = vector_index_->search(data, k);
+    auto end = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    GlobalLogger->debug("开始查询的时间:{}, 结束查询的时间:{}", start, end);
+    return res;
 }
     
 void VectorEngine::insert(const rapidjson::Document& json_request) {
@@ -44,12 +48,15 @@ void VectorEngine::insert(const rapidjson::Document& json_request) {
     }
     int id = object[REQUEST_ID].GetInt();
 
+    auto start = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     if (server_type == ServerType::INDEX || server_type == ServerType::VDB) {
         vector_index_->insert(data, id);
     }
     if (server_type == ServerType::STORAGE || server_type == ServerType::VDB) {
         vector_storage_->insert(id, json_request);
     }
+    auto end = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    GlobalLogger->debug("开始插入的时间:{}, 结束插入的时间:{}", start, end);
 }
 
 rapidjson::Document VectorEngine::query(const rapidjson::Document& json_request) {

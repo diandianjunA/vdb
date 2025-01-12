@@ -22,7 +22,6 @@ std::pair<std::vector<long>, std::vector<float>> FlatIndex::search_vectors(const
     int num_queries = query.size() / dim;
     std::vector<long> indices(num_queries * k);
     std::vector<float> distances(num_queries * k);
-    
     index->search(num_queries, query.data(), k, distances.data(), indices.data());
     return {indices, distances};
 }
