@@ -158,7 +158,6 @@ void ProxyHttpServer::forwardRequest(const httplib::Request& req, httplib::Respo
     std::string response_data;
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response_data);
 
-    auto end = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     // 执行 CURL 请求
     CURLcode curl_res = curl_easy_perform(curl);
     if (curl_res != CURLE_OK) {
@@ -176,8 +175,9 @@ void ProxyHttpServer::forwardRequest(const httplib::Request& req, httplib::Respo
             res.set_content(response_data, "application/json");
         }
     }
+    auto end = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     curl_easy_cleanup(curl);
-    GlobalLogger->debug("收到请求的时间:{}, 转发请求的时间:{}", start, end);
+    GlobalLogger->debug("收到请求的时间:{}, 收到请求的时间:{}", start, end);
 }
 
 size_t ProxyHttpServer::writeCallback(void *contents, size_t size, size_t nmemb, void *userp) {

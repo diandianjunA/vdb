@@ -38,6 +38,7 @@ std::pair<std::vector<long>, std::vector<float>> VectorIndex::search(const std::
         case IndexFactory::IndexType::HNSWFLAT: {
             HnswFlatIndex* hnsw_flat_index = static_cast<HnswFlatIndex*>(index);
             results = hnsw_flat_index->search_vectors(data, k);
+            break;
         }
         case IndexFactory::IndexType::FLAT_GPU: {
             FlatGPUIndex* flat_gpu_index = static_cast<FlatGPUIndex*>(index);
@@ -102,6 +103,7 @@ void VectorIndex::insert_batch(const std::vector<std::vector<float>>& vectors, c
         case IndexFactory::IndexType::HNSWFLAT: {
             HnswFlatIndex* hnsw_flat_index = static_cast<HnswFlatIndex*>(index);
             hnsw_flat_index->insert_batch_vectors(vectors, ids);
+            break;
         }
         case IndexFactory::IndexType::FLAT_GPU: {
             FlatGPUIndex* flat_gpu_index = static_cast<FlatGPUIndex*>(index);
@@ -135,6 +137,7 @@ void VectorIndex::saveIndex(const std::string& folder_path) {
         case IndexFactory::IndexType::HNSWFLAT: {
             HnswFlatIndex* hnsw_flat_index = static_cast<HnswFlatIndex*>(index);
             hnsw_flat_index->saveIndex(file_path);
+            break;
         }
         case IndexFactory::IndexType::FLAT_GPU: {
             FlatGPUIndex* flat_gpu_index = static_cast<FlatGPUIndex*>(index);
@@ -172,6 +175,7 @@ void VectorIndex::loadIndex(const std::string& folder_path) {
         case IndexFactory::IndexType::HNSWFLAT: {
             HnswFlatIndex* hnsw_flat_index = static_cast<HnswFlatIndex*>(index);
             hnsw_flat_index->loadIndex(file_path);
+            break;
         }
         case IndexFactory::IndexType::FLAT_GPU: {
             FlatGPUIndex* flat_gpu_index = static_cast<FlatGPUIndex*>(index);

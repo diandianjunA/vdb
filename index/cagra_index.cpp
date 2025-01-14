@@ -12,12 +12,22 @@ CAGRAIndex::CAGRAIndex(faiss::Index* cpu_index, faiss::gpu::GpuIndexCagra* gpu_i
 };
 
 void CAGRAIndex::insert_vectors(const std::vector<float>& data, uint64_t label) {
+    // auto start1 = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    // gpu_index->copyTo(dynamic_cast<faiss::IndexHNSWCagra*>(cpu_index));
+    // auto end1 = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     long id = static_cast<long>(label);
     try {
         id_map->add_with_ids(1, data.data(), &id);
     } catch (const std::exception& e) {
         GlobalLogger->error("insert error: {}", e.what());
     }
+    // auto start2 = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    // gpu_index->copyFrom(dynamic_cast<faiss::IndexHNSWCagra*>(cpu_index));
+    // auto end2 = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    // // GlobalLogger->debug("CAGRA copy to");
+    // // GlobalLogger->debug("开始copy的时间:{}, 结束copy的时间:{}", start1, end1);
+    // GlobalLogger->debug("CAGRA copy from");
+    // GlobalLogger->debug("开始copy的时间:{}, 结束copy的时间:{}", start2, end2);
 }
 
 void CAGRAIndex::insert_batch_vectors(const std::vector<std::vector<float>>& vectors, const std::vector<long>& ids) {
@@ -70,5 +80,6 @@ void CAGRAIndex::add(int num_train, const std::vector<float>& train_vec) {
 }
 
 void CAGRAIndex::update_index() {
+    std::lock_guard<std::mutex> lock(index_mutex);
     gpu_index->copyFrom(dynamic_cast<faiss::IndexHNSWCagra*>(cpu_index));
 }

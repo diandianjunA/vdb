@@ -3,6 +3,7 @@
 #include <faiss/gpu/StandardGpuResources.h>
 #include <faiss/gpu/impl/IndexUtils.h>
 #include <faiss/IndexIDMap.h>
+#include <mutex>
 
 class FlatGPUIndex {
 public:
@@ -20,4 +21,5 @@ public:
 private:
     faiss::Index* index;
     faiss::IndexIDMap* id_map;
+    std::mutex index_mutex;
 };

@@ -60,3 +60,6 @@ def main():
     vector_dim = 128
     search_k = 5
     run_test(type, vector_dim, search_k)
+
+if __name__ == "__main__":
+    main()

@@ -12,6 +12,7 @@ IVFPQIndex::IVFPQIndex(faiss::Index* index) : index(index) {
 void IVFPQIndex::insert_vectors(const std::vector<float>& data, uint64_t label) {
     long id = static_cast<long>(label);
     try {
+        std::lock_guard<std::mutex> lock(index_mutex);
         id_map->add_with_ids(1, data.data(), &id);
     } catch (const std::exception& e) {
         GlobalLogger->error("insert error: {}", e.what());
@@ -20,6 +21,7 @@ void IVFPQIndex::insert_vectors(const std::vector<float>& data, uint64_t label) 
 
 void IVFPQIndex::insert_batch_vectors(const std::vector<std::vector<float>>& vectors, const std::vector<long>& ids) {
     try {
+        std::lock_guard<std::mutex> lock(index_mutex);
         id_map->add_with_ids(vectors.size(), vectors.data()->data(), ids.data());
     } catch (std::runtime_error e) {
         GlobalLogger->error("insert error: {}", e.what());
@@ -28,6 +30,7 @@ void IVFPQIndex::insert_batch_vectors(const std::vector<std::vector<float>>& vec
 
 void IVFPQIndex::remove_vectors(const std::vector<long>& ids) {
     faiss::IDSelectorBatch selector(ids.size(), ids.data());
+    std::lock_guard<std::mutex> lock(index_mutex);
     id_map->remove_ids(selector);
 }
 
@@ -37,6 +40,7 @@ std::pair<std::vector<long>, std::vector<float>> IVFPQIndex::search_vectors(cons
     std::vector<long> indices(num_queries * k);
     std::vector<float> distances(num_queries * k);
     
+    std::lock_guard<std::mutex> lock(index_mutex);
     index->search(num_queries, query.data(), k, distances.data(), indices.data());
     return {indices, distances};
 }

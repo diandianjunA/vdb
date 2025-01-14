@@ -6,6 +6,8 @@
 #include <vector>
 #include <faiss/gpu/GpuIndexCagra.h>
 #include <faiss/IndexIDMap.h>
+#include <mutex>
+
 
 class CAGRAIndex {
 public:
@@ -27,4 +29,5 @@ private:
     faiss::gpu::GpuIndexCagra* gpu_index;
     faiss::Index* cpu_index;
     faiss::IndexIDMap* id_map;
+    std::mutex index_mutex;
 };

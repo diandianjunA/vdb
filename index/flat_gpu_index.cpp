@@ -10,10 +10,12 @@ FlatGPUIndex::FlatGPUIndex(faiss::Index* index) : index(index) {
 
 void FlatGPUIndex::insert_vectors(const std::vector<float>& data, uint64_t label) {
     long id = static_cast<long>(label);
+    std::lock_guard<std::mutex> lock(index_mutex);
     id_map->add_with_ids(1, data.data(), &id);
 }
 
 void FlatGPUIndex::insert_batch_vectors(const std::vector<std::vector<float>>& vectors, const std::vector<long>& ids) {
+    std::lock_guard<std::mutex> lock(index_mutex);
     id_map->add_with_ids(vectors.size(), vectors.data()->data(), ids.data());
 }
 
@@ -22,13 +24,15 @@ std::pair<std::vector<long>, std::vector<float>> FlatGPUIndex::search_vectors(co
     int num_queries = query.size() / dim;
     std::vector<long> indices(num_queries * k);
     std::vector<float> distances(num_queries * k);
-    
+
+    std::lock_guard<std::mutex> lock(index_mutex);
     index->search(num_queries, query.data(), k, distances.data(), indices.data());
     return {indices, distances};
 }
 
 void FlatGPUIndex::remove_vectors(const std::vector<long>& ids) {
     faiss::IDSelectorBatch selector(ids.size(), ids.data());
+    std::lock_guard<std::mutex> lock(index_mutex);
     id_map->remove_ids(selector);
 }
 

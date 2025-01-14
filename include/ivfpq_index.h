@@ -4,6 +4,8 @@
 #include <faiss/impl/IDSelector.h>
 #include <vector>
 #include <faiss/IndexIDMap.h>
+#include <mutex>
+
 
 class IVFPQIndex {
 public:
@@ -21,4 +23,5 @@ public:
 private:
     faiss::Index* index;
     faiss::IndexIDMap* id_map;
+    std::mutex index_mutex;
 };

@@ -65,9 +65,9 @@ void VdbHttpServer::setErrorJsonResponse(httplib::Response&res, int error_code, 
 }
 
 void VdbHttpServer::searchHandler(const httplib::Request& req, httplib::Response& res) {
-    auto start = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    // auto start = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     GlobalLogger->debug("Received search request");
-    GlobalLogger->debug("接到请求的时间:{}", start);
+    // GlobalLogger->debug("接到请求的时间:{}", start);
 
     // 解析json请求
     rapidjson::Document json_request;
@@ -132,9 +132,9 @@ void VdbHttpServer::searchHandler(const httplib::Request& req, httplib::Response
 }
 
 void VdbHttpServer::insertHandler(const httplib::Request& req, httplib::Response& res) {
-    auto start = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    // auto start = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     GlobalLogger->debug("Received insert request");
-    GlobalLogger->debug("接到请求的时间:{}", start);
+    // GlobalLogger->debug("接到请求的时间:{}", start);
 
     // 解析JSON请求
     rapidjson::Document json_request;
