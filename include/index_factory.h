@@ -10,6 +10,7 @@ public:
         FLAT_GPU,
         IVFPQ,
         CAGRA,
+        CUDAHNSW,
         UNKNOWN = -1 
     };
 

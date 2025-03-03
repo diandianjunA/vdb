@@ -4,6 +4,7 @@
 #include "include/hnsw_flat_index.h"
 #include "include/flat_gpu_index.h"
 #include "include/ivfpq_index.h"
+#include "include/cuda_hnsw_index.h"
 #include "cagra_index.h"
 #include "include/constant.h"
 #include "include/logger.h"
@@ -88,6 +89,11 @@ void VectorIndex::insert(const std::vector<float>& data, uint64_t id) {
             cagra_index->insert_vectors(data, id);
             break;
         }
+        case IndexFactory::IndexType::CUDAHNSW: {
+            CUDAHNSWIndex* cudahnsw_index = static_cast<CUDAHNSWIndex*>(index);
+            cudahnsw_index->insert_vectors(data.data(), id);
+            break;
+        }
         default:
             break;
     }
@@ -118,6 +124,11 @@ void VectorIndex::insert_batch(const std::vector<std::vector<float>>& vectors, c
         case IndexFactory::IndexType::CAGRA: {
             CAGRAIndex* cagra_index = static_cast<CAGRAIndex*>(index);
             cagra_index->insert_batch_vectors(vectors, ids);
+            break;
+        }
+        case IndexFactory::IndexType::CUDAHNSW: {
+            CUDAHNSWIndex* cudahnsw_index = static_cast<CUDAHNSWIndex*>(index);
+            cudahnsw_index->insert_vectors_batch(vectors, ids);
             break;
         }
         default:

@@ -5,6 +5,7 @@
 #include "include/ivfpq_index.h"
 #include "include/cagra_index.h"
 #include "include/logger.h"
+#include "include/cuda_hnsw_index.h"
 #include <faiss/MetricType.h>
 #include <faiss/IndexFlat.h>
 #include <faiss/IndexHNSW.h>
@@ -137,6 +138,17 @@ void* IndexFactory::init(IndexType type, int dim, int num_add, MetricType metric
             // std::vector<float> add_vec = randVecs(num_add, dim);
             // index->add(num_add, add_vec);
             return index;
+        }
+        case IndexType::CUDAHNSW: {
+            // return new CUDAHNSWIndex(dim, num_train);
+            CUDAHNSWIndex *cuindex = new CUDAHNSWIndex(dim, num_add, 16, 200);
+            std::vector<float> add_vec = randVecs(num_add, dim);
+            std::vector<long> labels(num_add);
+            for (int i = 0; i < num_add; i++) {
+                labels[i] = i;
+            }
+            cuindex->insert_vectors_batch(add_vec, labels);
+            return cuindex;
         }
         default:
             return nullptr;
