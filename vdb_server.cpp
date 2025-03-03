@@ -127,6 +127,13 @@ int main(int argc, char* argv[]) {
             IndexFactory::IndexType type = IndexFactory::IndexType::CAGRA;
             void* index = globalIndexFactory->init(type, dim, num_train);
             vector_index = new VectorIndex(index, type);
+        } else if (index_type == "CUDAHNSW") {
+            IndexFactory::IndexType type = IndexFactory::IndexType::CUDAHNSW;
+            void* index = globalIndexFactory->init(type, dim, num_train);
+            vector_index = new VectorIndex(index, type);
+        } else {
+            throw std::runtime_error("index_type is illegal");
+            exit(1);
         }
     }
     if (server_type == ServerType::VDB || server_type == ServerType::STORAGE) {
